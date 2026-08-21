@@ -11,7 +11,7 @@ const petSchema = new mongoose.Schema({
         default:'Cat' // Sets the default to feline
     },
     ownerId:{
-        type:mongoose.Schema.types.ObjectId,
+        type:mongoose.Schema.Types.ObjectId,
         ref:'User',
         required:true // A pet must be attactched to a human account    
         },

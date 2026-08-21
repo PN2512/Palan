@@ -47,7 +47,6 @@ router.post('/login',async(req,res)=>{
          const isMatch =await bcrypt.compare(password,user.password);
          if(!isMatch){
             return res.status(400).json({message:'Invalid email or password'})
-
          }
 
          // 3. Generate a JWT token
@@ -59,16 +58,33 @@ router.post('/login',async(req,res)=>{
             expiresIn:'1h'
          });
 
+         console.log("login successfully");
+         
          // 4. Send the token back to frontend
          res.status(200).json({
             message:'Logged in successfully',
-            token:token 
+            token:token ,
+            user :{
+                id:user._id,
+                name: user.name,
+                email:user.email
+
+            }
          });
 
     }catch(error){
         console.error('Login error:',error.message);
-        res.status(500).json({message:'Server error during login'});
+        res.status(500).json({message:'Server error during login'}
+
+        );
 
     }
 });
+
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// @route   POST /api/auth/google
+// @desc    Authenticate user with Google Sign-In
+
 module.exports=router

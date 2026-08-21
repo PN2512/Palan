@@ -1,0 +1,95 @@
+/* Palan.css */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* Rich deep blue and purple gradient background */
+  background: linear-gradient(135deg, #0f172a, #312e81, #1e1b4b);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* The Glassmorphism Card */
+.palan-card {
+  background: rgba(255, 255, 255, 0.07); /* Semi-transparent glass */
+  backdrop-filter: blur(16px);          /* Frosted glass blur */
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15); /* Soft light border */
+  border-radius: 24px;
+  padding: 40px 35px;
+  width: 400px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  z-index: 10;
+}
+
+.palan-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.palan-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.palan-input {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: white;
+  font-size: 15px;
+  outline: none;
+}
+
+.palan-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.palan-input:focus {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.palan-btn-login {
+  background: #ffffff;
+  color: #1e1b4b;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.palan-btn-login:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.palan-divider {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin: 5px 0;
+}
