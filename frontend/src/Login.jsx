@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
+import myLogo from './assets/logo.png';
 import './Palan.css'; 
 
 const Login = () => {
@@ -56,16 +57,28 @@ const Login = () => {
         <div> 
             <div className="palan-card">
                 
-                {/* Header with Clean Icon */}
-                <div className="palan-header">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#ffffff' }}>
-                        <path d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm7 5c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5 8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm7 4c-2.8 0-5 2.2-5 5 0 2 1.2 3.7 3 4.5V22h4v-3.5c1.8-.8 3-2.5 3-4.5 0-2.8-2.2-5-5-5z"/>
-                    </svg>
-                    <span>Palan</span>
+                {/* --- Header: Logo on the left of the name --- */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '4px' }}>
+                        <img 
+                            src={myLogo} 
+                            alt="Palan Logo" 
+                            style={{ 
+                                width: '46px', 
+                                height: '46px', 
+                                objectFit: 'cover',
+                                borderRadius: '50%',
+                                filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.3))' 
+                            }} 
+                        />
+                        <h2 style={{ color: '#ffffff', fontSize: '28px', fontWeight: '700', margin: 0, letterSpacing: '0.5px' }}>
+                            Palan
+                        </h2>
+                    </div>
+                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', margin: 0 }}>
+                        Your Pet Care Companion
+                    </p>
                 </div>
-                <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginTop: '-10px', marginBottom: '10px' }}>
-                    Your Pet Care Companion
-                </p>
 
                 {error && <p style={{ color: '#ffb3b3', textAlign: 'center', fontSize: '14px' }}>{error}</p>}
 
@@ -101,7 +114,7 @@ const Login = () => {
                     />
                 </div>
 
-                <p style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginTop: '5px' }}>
+                <p style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginTop: '12px' }}>
                     Don't have an account? <a href="/signup" style={{ color: 'white', textDecoration: 'underline', fontWeight: '500' }}>Sign up</a>
                 </p>
             </div>
