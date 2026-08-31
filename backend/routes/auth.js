@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt =require('jsonwebtoken');
 const User = require('../models/User');
 
+
 const router = express.Router();
 
 // Sign-up a new user(POST /api / auth /signup)

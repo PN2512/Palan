@@ -26,7 +26,7 @@ const Dashboard =() =>{
                     height:'36px',
                     objectFit:'cover',
                     borderRadius:'50%',
-                    filter:'drop-shodow( 0px 2px 4px rgbs(0,0,0,0.3))'
+                    filter:'drop-shadow( 0px 2px 4px rgbs(0,0,0,0.3))'
 
                   }}
                 />
@@ -107,11 +107,11 @@ const Dashboard =() =>{
                             <ul style={{listStyleType:'none',
                                 padding:0,
                                 margin:0,
-                                display:'felx',
+                                display:'flex',
                                 flexDirection:'column',
                                 gap:'10px'
                                         }}>
-                                   <li style={{background:'rgba(225,255,255,0.05)',
+                                   <li style={{background:'rgba(255,255,255,0.05)',
                                                padding:'10px',
                                                borderRadius:'8px',
                                                borderLeft:'4px solid #4ca1af' ,
@@ -121,7 +121,7 @@ const Dashboard =() =>{
                                     <li style={{background:'rgba(255,255,255,0.05)',
                                                 padding:'10px',
                                                 borderRadius:'8px',
-                                                borderleft:'4px solid #ffb3be',
+                                                borderLeft:'4px solid #ffb3be',
 
                                                 }}>
                                         Administer Medication

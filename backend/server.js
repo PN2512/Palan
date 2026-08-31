@@ -5,11 +5,13 @@ require('dotenv').config();
 
 const app = express();
 const authRoutes= require('./routes/auth')
+const petRoutes = require('./routes/pets')
 
 // MIDDLEWARE 
 app.use(cors());
 app.use(express.json()); // ALLOWS US TO READ JSON DATA FROM REACT
 app.use('/api/auth',authRoutes);
+app.use('/api/pets',petRoutes)
 
 // CONNECT TO MONGODB ATLAS
 
