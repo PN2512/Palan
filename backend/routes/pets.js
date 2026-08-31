@@ -15,9 +15,9 @@ router.post('/' , auth , async (req , res)=>{
             ownerId : req.user.userId
         });
 
-        const savePet = await newPet.save();
+        const savedPet = await newPet.save();
 
-        await User.findByIdAndUpdate(res.user.userId ,{
+        await User.findByIdAndUpdate(req.user.userId ,{
             $push:{pets : savePet._id}
         });
         res.status(201).json(savedPet);
@@ -29,7 +29,7 @@ router.post('/' , auth , async (req , res)=>{
 
 router.get('/',auth,async(req,res)=>{
     try{
-        const pet = (await Pets.find({ownerId:req.user.userId})).sort({createdAt:-1});
+        const pets = (await Pet.find({ownerId:req.user.userId})).sort({createdAt:-1});
         res.status(200).json(pets);
     }
     catch(error){

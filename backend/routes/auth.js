@@ -88,4 +88,48 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // @route   POST /api/auth/google
 // @desc    Authenticate user with Google Sign-In
 
-module.exports=router
+router.post('/google',async (req ,res) =>{
+    try{
+        const {credential} = req.body;
+
+        const ticket = await client.verigyIdToken({
+            idToken:credential,
+            audience:process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const {name , email} = ticket.getpayload();
+        let user = await User.findOne({email});
+
+        if(!user){
+            const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword =await bcrypt.hash(randomPassword,salt);
+
+            user = new User({
+                name,
+                email,
+                password:hashedPassword
+
+            });
+            await user.save();
+        }
+
+        const payload = {userId : user._id};
+        const token = jwt.sign(payload , process.env.JWT_SECRET || 'fallback_secret_key',{
+            expiresIn:'1h'
+        });
+
+        res.status(200).json({
+            message:'Google Login Successful',
+            token:token,
+            user:{id:user._id,name:user.name,email:user.email}
+        });
+
+
+    }catch(error){
+        console.error('Google Auth Error :', error.message);
+        res.status(500).json({message:"Google authentication failed"});
+    }
+})
+
+module.exports = router

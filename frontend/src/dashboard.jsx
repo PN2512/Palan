@@ -2,10 +2,47 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import myLogo from './assets/logo.png';
 import './Dashboard.css';
+import { useState } from 'react';
+import { useEffect } from 'react';
 
 
 const Dashboard =() =>{
     const navigate = useNavigate();
+    const [pets,setPets]=useState([]);
+    const [loading,setLoading] = useState(true)
+
+    //1 fetch pets as soon as the dashboard loads
+    useEffect(()=>{
+        const fetchPets =async ()=>{
+            const token = localStorage.getItem('authToken');
+
+            // if they somehow get here without a token , kick them to login
+            if(!token){
+                navigate('/login')
+            }
+            try{
+                const responce = await fetch('http://localhost:5000/api/pets',{
+                    method:'GET',
+                    headers:{
+                        'Authorization':`Bearer ${token}`
+                    }
+
+                });
+                if(responce.ok){
+                    const data = await responce.json();
+                    setPets(data); // save the fetched pets to state
+                }else{
+                    console.error("Failed to fetch pets ");
+                }
+
+            }catch(error){
+                console.error("error connecting to server:", error);
+            }finally{
+                setLoading(false); // stop the loading text
+            }
+        };
+        fetchPets();
+    },[navigate]);
 
     const handleLogout =() =>{
         
@@ -56,21 +93,56 @@ const Dashboard =() =>{
                     <div className='dash-card'>
                         <h3>My Pets</h3>
                         <div className='card-content'>
-                            <p>You haven't added any pet profiles yet.</p>
-                            <button style={{
-                                marginTop:"15px",
-                                padding: '10px 15px',
-                                borderRadius:'8px',
-                                border:'none',
-                                background:'white',
-                                color:'#1e1b4b',
-                                cursor:'pointer',
-                                fontWeight:'bold'
-                            }}>
-                                + Add a pet
-                            </button>
+                            {/*Dynamic pet Display Logic*/}
+                            {loading ?(
+                                <p>Loading your pets</p>
+                            ) : pets.length === 0 ?(
+                                <p>You haven't added any pet profiles yet.</p>
+                            ) : (
+                                <ul style={{listStyle:'none',
+                                    padding:0,
+                                    margin:0,
+                                    display:'flex',
+                                    flexDirection:'column',
+                                    gap:'10px'
+
+                                }}>
+                                    {pets.map(pet =>(
+                                        <li key={pet._id} style={{
+                                            background:'rgba(255,255,255,0.05)',
+                                            padding:'12px',
+                                            borderRadius:'8px',
+                                            display:'flex',
+                                            justifyContent:'space-between',
+                                            alignItem:'center'
+                                        }}>
+                                            <div>
+                                                <strong  style={{fontSize:'16px'}}>{pet.name}</strong>
+                                                <span style={{display:'block',
+                                                    fontSize:'12px',
+                                                    color:'#cbd5e1'
+                                                }}>
+                                                    {pet.species}
+                                                </span>
+                                            </div>
+                                            {pet.age && <span style={{fontSize:'13px', color:'#cbd5e1' }} > Age:{pet.age}</span>}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            
+                            {/*Add Pet Button*/}
+                            <button onClick={()=> navigate('/add-pet')} 
+                                style={{
+                                    marginTop:'15px' ,padding:'10px 15px' ,borderRadius:'8px',border:'none',
+                                    background:"white" , color:"#1e1b4b" , cursor:"pointer", fontWeight:"bold",
+                                    width:pets.length> 0 ? '100%' : 'auto'  // expands button is a list above it
+                                }}>
+                                    +Add a Pet
+                                </button>
                         </div>
                     </div>
+
                     {/*Feeding Reminder Card*/}
                     <div className='dash-card'>
                         <h3>Upcoming Feedings</h3>
@@ -132,8 +204,8 @@ const Dashboard =() =>{
                 </div>
             </main>
         </div>
-    )
-}
+    );
+};
 
 
 
