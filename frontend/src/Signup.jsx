@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
+// import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import myLogo from './assets/logo.png'; // Imported circular logo
 import './Palan.css';
@@ -42,25 +42,25 @@ const Signup = () => {
         }
     };
 
-    const handleGoogleSuccess = async (credentialResponse) => {
-        try {
-            const response = await fetch('http://localhost:5000/api/auth/google', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ credential: credentialResponse.credential }),
-            });
-            const data = await response.json();
+    // const handleGoogleSuccess = async (credentialResponse) => {
+    //     try {
+    //         const response = await fetch('http://localhost:5000/api/auth/google', {
+    //             method: 'POST',
+    //             headers: { 'Content-Type': 'application/json' },
+    //             body: JSON.stringify({ credential: credentialResponse.credential }),
+    //         });
+    //         const data = await response.json();
 
-            if (response.ok) {
-                localStorage.setItem('authToken', data.token);
-                navigate('/dashboard');
-            } else {
-                setError(data.message);
-            }
-        } catch (error) {
-            setError('Something went wrong with Google Signup.');
-        }
-    };
+    //         if (response.ok) {
+    //             localStorage.setItem('authToken', data.token);
+    //             navigate('/dashboard');
+    //         } else {
+    //             setError(data.message);
+    //         }
+    //     } catch (error) {
+    //         setError('Something went wrong with Google Signup.');
+    //     }
+    // };
 
     return (
         <div>
@@ -122,7 +122,7 @@ const Signup = () => {
 
                 <div className="palan-divider">OR</div>
 
-                <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                {/* <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                     <GoogleLogin
                         text="signup_with" 
                         shape="rectangular"
@@ -130,7 +130,7 @@ const Signup = () => {
                         onSuccess={handleGoogleSuccess}
                         onError={() => setError('Google Signup Failed')}
                     />
-                </div>
+                </div> */}
 
                 <p style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginTop: '12px' }}>
                     Already have an account? <a href="/login" style={{ color: 'white', textDecoration: 'underline', fontWeight: '500' }}>Log in</a>

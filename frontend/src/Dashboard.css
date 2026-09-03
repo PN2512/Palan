@@ -6,11 +6,14 @@ body,html{
     margin:0 !important;
     padding: 0 !important;
     overflow: hidden !important;
+    width: 100%;
 }
 .dashboard-container{
     display:flex;
     height: 100vh;
-    width: 100vw;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
     /*Rich deep blue and purple gradient background*/
     background: linear-gradient(135deg,#0f172a,#312e81,#1e1b4b);
     color:white;
@@ -35,6 +38,7 @@ body,html{
     border-bottom: 1px solid rgba(255,255,255,0.1);
     padding-bottom:20px;
 }
+
 
 .nav-links{
     display: flex;
@@ -65,11 +69,11 @@ body,html{
     margin-top: auto;
     background: rgba(255,255,255,0.1);
     color: #ffb3b3;
-    border: 1px solid rgba(255,100,100,0.3);
+    border: 1px solid rgba(239, 89, 89, 0.625);
 }
 
 .logout-btn:hover{
-    background: rgba(255,100,100,0.2);
+    background: rgba(205, 36, 36, 0.659);
 }
 
 
@@ -131,4 +135,62 @@ body,html{
     font-size:15px;
     line-height: 1.5;
 
+}
+
+/* --- Default Desktop Styles --- */
+.mobile-toggle-btn {
+    display: none; /* Hidden on big screens */
+}
+
+/* --- Mobile View (Screens smaller than 768px) --- */
+@media (max-width: 768px) {
+    
+    /* The new shape-shifting floating button */
+    .mobile-toggle-btn {
+        display: block; 
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1005; /* Ensures it sits on top of the sidebar AND the overlay */
+        background: none;
+        border: none;
+        color: white;
+        font-size: 28px;
+        cursor: pointer;
+        padding: 5px;
+        transition: color 0.3s ease;
+    }
+
+    /* Rest of your existing mobile CSS stays the same! */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 1000;
+        transform: translateX(-100%); 
+        transition: transform 0.3s ease-in-out; 
+    }
+
+    .sidebar.open {
+        transform: translateX(0); 
+    }
+
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 999; 
+    }
+
+    .main-content {
+        padding: 60px 20px 20px 20px; 
+    }
+    .dashboard-header{
+        margin-top: 50px;
+    }
 }
