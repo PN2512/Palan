@@ -1,5 +1,6 @@
 import React,{useState, useEffect} from "react";
 import {useNavigate} from 'react-router-dom';
+import './MyPets.css'
 
 import './Dashboard.css';
 
@@ -8,15 +9,18 @@ const MyPets =() =>{
     const[pets,setPets] = useState([]);
     const [loading,setLoading] = useState(true);
 
-    const fetchPets = async () =>{
+    const fetchPets = async () => {
         const token = localStorage.getItem('authToken');
         try{
-            const response = await fetch('http://localhost:5000/api/pets',{
-                headers:{'Authorization ': `Bearer ${token}`}
+            const response = await fetch('http://localhost:5000/api/pets', {
+                
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if(response.ok){
                 const data = await response.json();
                 setPets(data);
+            } else {
+                console.error("Failed to fetch. Backend blocked it!");
             }
         }catch(error){
             console.error('Error fetching pets:', error);
@@ -43,8 +47,7 @@ const MyPets =() =>{
         }
 
     };
-
-    return(
+return(
         <div className="dashboard-container">
             <main className="main-content" style={{padding:'40px'}}>
                 <div style={{
@@ -54,52 +57,31 @@ const MyPets =() =>{
                     marginBottom:'30px'}}>
                         <div>
                             <h1>My Pets🐾</h1>
-                            <p>Manage all your registered pet profiles in on place.</p>
-
+                            <p>Manage all your registered pet profiles in one place.</p>
                         </div>
                         <div style={{
-                            display:'felx' ,
+                            display:'flex', /* Fixed typo: was 'felx' */
                             gap:'10px'}}>
-                                <button onClick={()=>navigate('/dashboard')} style={{
-                                    padding:'10px 15px ',
-                                    borderRadius:'8px',
-                                    border:'none',
-                                    background:'rgba(255,255,255,0.1)',
-                                    color:'white',
-                                    cursor:'pointer',
-
-                                }}>
-                                    back to Dashboard
+                                
+                                {/* 👇 Upgraded to btn-secondary */}
+                                <button onClick={()=>navigate('/dashboard')} className="btn-secondary">
+                                    Back to Dashboard
                                 </button>
-                                <button onClick={()=>navigate('/add-pet')} style={{
-                                    padding:'10px 15px',
-                                    borderRadius:'8px',
-                                    border:'none',
-                                    background:'white',
-                                    color:'#1e1b4b',
-                                    fontWeight:'bold',
-                                    cursor:'pointer'
-                                }}>
+                                
+                                {/* 👇 Upgraded to btn-primary */}
+                                <button onClick={()=>navigate('/add-pet')} className="btn-primary">
                                     + Add New Pet
                                 </button>
-                            </div>
+                        </div>
                 </div>
                 {loading ?(
                     <p>Loading your pets...</p>
                 ) : pets.length === 0 ? (
-                    <div className="dash-card" style ={{textAlign:'center',
-                        padding:'40px'
-                    }}>
-                        <p>No pets found. Start by adding first companion!</p>
-                        <button onClick={() => navigate('/add-pet')} style={{marginTop:'15px',
-                            padding:'10px 20px ',
-                            borderRadius:'8px',
-                            border:'none',
-                            background:'white',
-                            color:'#1e1b4b',
-                            fontWeight:'bold',
-                            cursor:'pointer'
-                        }}>
+                    <div className="dash-card" style={{textAlign:'center', padding:'40px'}}>
+                        <p>No pets found. Start by adding your first companion!</p>
+                        
+                        {/* 👇 Upgraded to btn-primary */}
+                        <button onClick={() => navigate('/add-pet')} className="btn-primary" style={{marginTop:'15px'}}>
                             Add a Pet
                         </button>
                     </div>
@@ -116,10 +98,10 @@ const MyPets =() =>{
                                        display:'flex',
                                        justifyContent:'space-between',
                                        alignItems:'center'
-
                                     }}>
                                         {pet.name}
-                                        <span style={{fontSize:'12px',
+                                        <span style={{
+                                            fontSize:'12px',
                                             background:'rgba(255,255,255,0.15)',
                                             padding:'4px 8px',
                                             borderRadius:'6px'
@@ -128,18 +110,15 @@ const MyPets =() =>{
                                         </span>
                                     </h3>
                                     <div className="card-content" style={{marginTop:'10px'}}>
-                                        <p><strong>Age:</strong>{pet.age ? `${pet.age} years old ` : 'Not specified'}</p>
+                                        <p><strong>Age: </strong>{pet.age ? `${pet.age} years old` : 'Not specified'}</p>
                                     </div>
-
                                 </div>
-                                <button onClick={()=> handleDelete(pet._id)} style={{marginTop:'20px' ,
-                                    padding:'8px',
-                                    borderRadius:'6px',
-                                    border:'1px solid rgba(255 ,100 ,100, 0.3)', background:'rgba(255,100,100,0.1)',color:'#ffb3b3',cursor:'pointer',fontWeight:'500'
-
-                                }}>
+                                
+                                {/* 👇 Upgraded to btn-danger */}
+                                <button onClick={()=> handleDelete(pet._id)} className="btn-danger">
                                     Remove Pet
                                 </button>
+                                
                             </div>
                         ))}
                     </div>

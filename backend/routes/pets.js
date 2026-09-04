@@ -6,13 +6,13 @@ const auth = require('../middleware/auth');
 
 router.post('/' , auth , async (req , res)=>{
     try{
-        const {name , species , age} =req.body;
+        const {name , species , age} = req.body;
 
         const newPet = new Pet({
-            name,
-            species,
-            age,
-            ownerId : req.user.userId
+            name: name,
+            species: species,
+            age: age,
+            ownerId: req.user.userId
         });
 
         const savedPet = await newPet.save();
@@ -20,6 +20,8 @@ router.post('/' , auth , async (req , res)=>{
         await User.findByIdAndUpdate(req.user.userId ,{
             $push:{pets : savedPet._id}
         });
+        
+        // Only send the response ONCE at the very end!
         res.status(201).json(savedPet);
     }catch(error){
         console.error('Error adding pet:', error.message);
@@ -27,19 +29,24 @@ router.post('/' , auth , async (req , res)=>{
     }
 });
 
-router.get('/',auth,async(req,res)=>{
-    try{
-        const pets = await Pet.find({ownerId:req.user.userId}).sort({createdAt:-1});
+router.get('/', auth, async(req, res) => {
+    try {
+        // 👇 ADD THIS LINE TO SEE WHAT YOUR TOKEN HOLDS!
+        console.log("DEBUG: My user payload is:", req.user); 
+
+        const pets = await Pet.find({ ownerId: req.user.userId }).sort({ createdAt: -1 });
         res.status(200).json(pets);
     }
-    catch(error){
+    catch(error) {
         console.error('Error fetching pets:', error.message);
-        res.status(500).json({message:"Server error while fetching pets"});
+        res.status(500).json({ message: "Server error while fetching pets" });
     }
 });
+
 router.delete('/:id',auth , async(req,res) =>{
     try{
-        const pet = await Pet.findOneAndDelete({_id: req.params.id, owerId: req.user.userId});
+        // Fixed typo: owerId -> ownerId
+        const pet = await Pet.findOneAndDelete({_id: req.params.id, ownerId: req.user.userId});
         if(!pet) return res.status(404).json({message:'Pet not found'});
 
         await User.findByIdAndUpdate(req.user.userId,{$pull:{pets:pet._id }});
@@ -47,8 +54,9 @@ router.delete('/:id',auth , async(req,res) =>{
         res.status(200).json({message:'Pet deleted successfully'});
 
     }catch(error){
-        console.error('Error deleteing pet :',error,message);
-        res.status(500),json({message:'Server error while deleting pet'});
+        // Fixed typos: error,message -> error.message AND res.status(500),json -> res.status(500).json
+        console.error('Error deleting pet :', error.message);
+        res.status(500).json({message:'Server error while deleting pet'});
     }
 });
 

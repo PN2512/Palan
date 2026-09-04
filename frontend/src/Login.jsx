@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-// import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import myLogo from './assets/logo.png';
 import './Palan.css'; 
+import './Login.css';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -32,29 +32,9 @@ const Login = () => {
         }
     };
 
-    // const handleGoogleSuccess = async (credentialResponse) => {
-    //     try {
-    //         const response = await fetch('http://localhost:5000/api/auth/google', {
-    //             method: 'POST',
-    //             headers: { 'Content-Type': 'application/json' },
-    //             body: JSON.stringify({ credential: credentialResponse.credential }),
-    //         });
-    //         const data = await response.json();
-
-    //         if (response.ok) {
-    //             localStorage.setItem('authToken', data.token);
-    //             setError('');
-    //             navigate('/dashboard');
-    //         } else {
-    //             setError(data.message);
-    //         }
-    //     } catch (error) {
-    //         setError('Something went wrong. Please try again.');
-    //     }
-    // };
-
     return (
-        <div> 
+        /* Removed the extra <div> that was here! */
+        <div className="login-wrapper">
             <div className="palan-card">
                 
                 {/* --- Header: Logo on the left of the name --- */}
@@ -103,16 +83,6 @@ const Login = () => {
                 </form>
 
                 <div className="palan-divider">OR</div>
-
-                {/* <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    <GoogleLogin
-                        text="signin_with" 
-                        shape="rectangular"
-                        width="330px"
-                        onSuccess={handleGoogleSuccess}
-                        onError={() => setError('Google Login Failed')}
-                    />
-                </div> */}
 
                 <p style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginTop: '24px' }}>
                     Don't have an account? <a href="/signup" style={{ color: 'white', textDecoration: 'underline', fontWeight: '500' }}>Sign up</a>

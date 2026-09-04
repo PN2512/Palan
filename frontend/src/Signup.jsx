@@ -62,9 +62,10 @@ const Signup = () => {
     //     }
     // };
 
-    return (
-        <div>
-            <div className="palan-card">
+   return (
+        <div className="login-wrapper">
+            {/* 👇 You just need to add this line back in! */}
+            <div className="palan-card"> 
                 
                 {/* --- Header with Circular Logo on the Left --- */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '16px' }}>
@@ -122,20 +123,12 @@ const Signup = () => {
 
                 <div className="palan-divider">OR</div>
 
-                {/* <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    <GoogleLogin
-                        text="signup_with" 
-                        shape="rectangular"
-                        width="330px"
-                        onSuccess={handleGoogleSuccess}
-                        onError={() => setError('Google Signup Failed')}
-                    />
-                </div> */}
-
                 <p style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginTop: '12px' }}>
                     Already have an account? <a href="/login" style={{ color: 'white', textDecoration: 'underline', fontWeight: '500' }}>Log in</a>
                 </p>
-            </div>
+                
+            {/* 👇 These two closing tags perfectly match the two wrappers now! */}
+            </div> 
         </div>
     );
 };

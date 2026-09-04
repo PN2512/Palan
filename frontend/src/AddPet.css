@@ -1,0 +1,133 @@
+/* =========================================
+   1. The Animated Form Card
+   ========================================= */
+.add-pet-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    margin-top: 20px;
+    
+    /* ✨ Magic Slide-Up Animation ✨ */
+    opacity: 0;
+    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Keyframes for the entrance animation */
+@keyframes slideUpFade {
+    0% { 
+        opacity: 0; 
+        transform: translateY(40px); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+/* =========================================
+   2. Interactive Input Fields
+   ========================================= */
+.add-pet-form-group {
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.add-pet-form-group label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.add-pet-input {
+    width: 100%;
+    padding: 15px 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    color: white;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* Change dropdown arrow colors */
+.add-pet-input option {
+    background: #1e1b4b; /* Deep purple dropdown background */
+    color: white;
+}
+
+/* ✨ Glowing Focus Effect ✨ */
+.add-pet-input:focus {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #6366f1; /* Neon indigo glow */
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    transform: translateY(-2px); /* Lifts the input slightly */
+}
+
+/* =========================================
+   3. Premium Buttons
+   ========================================= */
+.add-pet-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 35px;
+}
+
+/* The Save Button (Primary) */
+.btn-save {
+    flex: 1;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #6366f1, #4f46e5); /* Vibrant gradient */
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-save:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5);
+    background: linear-gradient(135deg, #818cf8, #4f46e5);
+}
+
+.btn-save:active {
+    transform: scale(0.97);
+}
+
+/* The Cancel Button (Secondary/Danger) */
+.btn-cancel {
+    flex: 1;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 100, 100, 0.3);
+    background: rgba(255, 100, 100, 0.05);
+    color: #ffb3b3;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+    background: rgba(255, 100, 100, 0.15);
+    border-color: rgba(255, 100, 100, 0.5);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-cancel:active {
+    transform: scale(0.97);
+}

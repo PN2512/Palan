@@ -1,0 +1,74 @@
+/* 1. The Main Wrapper (Fixed the 400px padding!) */
+.login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    width: 100%;
+    padding: 20px; /* Standard spacing for mobile edges */
+    background: linear-gradient(135deg, #0f172a, #312e81, #1e1b4b);
+    box-sizing: border-box;
+}
+
+/* 2. The Glass Card (Combined styles and fixed padding!) */
+.palan-card {
+    width: 100%;
+    max-width: 450px; /* Beautiful proportion for desktop */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px 30px; /* 40px top/bottom, 30px sides gives inputs maximum room */
+    box-sizing: border-box;
+    color: white;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+/* 3. Style the Input Fields */
+.palan-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 15px 16px; 
+    margin-bottom: 16px; 
+    
+    background: rgba(255, 255, 255, 0.08); 
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px; 
+    
+    color: white;
+    font-size: 16px; 
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.palan-input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* 4. Style the Sign In Button */
+.palan-btn-login {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 15px; 
+    margin-top: 10px;
+    
+    background: white;
+    color: #1e1b4b; 
+    border: none;
+    border-radius: 10px; 
+    
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.1s ease;
+}
+
+.palan-btn-login:hover {
+    background: #e2e8f0; 
+}
+
+.palan-btn-login:active {
+    transform: scale(0.98); 
+}

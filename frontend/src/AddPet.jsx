@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import myLogo from './assets/logo.png';
 import './Dashboard.css';
+import './AddPet.css'
+
 
 const AddPet = () => {
     const navigate = useNavigate();
@@ -56,26 +58,12 @@ const AddPet = () => {
         <div className='dashboard-container'>
             {/*Sidebar Navigation */}
             <aside className="sidebar">
-                <div className='sidebar-logo' style={{
-                    display: "flex",
-                    alignItems: "center",
-                    paddingLeft: "10px"
-                }}>
+                <div className='sidebar-logo' style={{ display: "flex", alignItems: "center", paddingLeft: "10px" }}>
                     <img src={myLogo} alt="Palan Logo" style={{
-                        width: '36px',
-                        height: "36px",
-                        objectFit: "cover",
-                        borderRadius: "50%",
-                        filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.3))"
+                        width: '36px', height: "36px", objectFit: "cover",
+                        borderRadius: "50%", filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.3))"
                     }} />
-                    <span style={{
-                        fontSize: "24px",
-                        fontWeight: "bold",
-                        letterSpacing: "0.5px",
-                        color: "#ffffff",
-                        marginLeft: "15px",
-                        transform: "translateY(-3px)"
-                    }}>
+                    <span style={{ fontSize: "24px", fontWeight: "bold", letterSpacing: "0.5px", color: "#ffffff", marginLeft: "15px", translateY: "-3px" }}>
                         Palan
                     </span>
                 </div>
@@ -92,23 +80,29 @@ const AddPet = () => {
                     <h1>Add a New Pet 🐾</h1>
                     <p>Tell us a little bit about your companion.</p>
                 </header>
-                <div className='dash-card' style={{ maxWidth: "500px" }}>
+                
+                {/* 👇 The new animated card wrapper */}
+                <div className='add-pet-card'>
                     <form onSubmit={handleAddPetSubmit}>
-                        <div className="form-group">
+                        <div className="add-pet-form-group">
                             <label>Pet Name</label>
-                            <input type="text"
+                            <input 
+                                type="text"
                                 placeholder='e.g. Luna'
                                 value={petName}
                                 onChange={(e) => setPetName(e.target.value)}
                                 required
+                                className="add-pet-input"
                             />
                         </div>
-                        <div className='form-group'>
+                        <div className='add-pet-form-group'>
                             <label>Species</label>
                             <select 
                                 required
                                 value={species}
-                                onChange={(e) => setSpecies(e.target.value)}>
+                                onChange={(e) => setSpecies(e.target.value)}
+                                className="add-pet-input"
+                            >
                                 <option value="" disabled>Select Species</option>
                                 <option value="Dog">Dog</option>
                                 <option value="Cat">Cat</option>
@@ -118,22 +112,23 @@ const AddPet = () => {
                                 <option value="Other">Other</option>
                             </select>
                         </div>
-                        <div className='form-group'>
+                        <div className='add-pet-form-group'>
                             <label>Age (in Years)</label>
-                            <input type="number"
+                            <input 
+                                type="number"
                                 step="0.1"
                                 placeholder='e.g. 2.5'
                                 value={age}
                                 onChange={(e) => setAge(e.target.value)}
+                                className="add-pet-input"
                             />
                         </div>
-                        <div style={{ display: "flex", gap: "15px", marginTop: "20px" }}>
-                            <button type="button" className='submit-pet-btn' style={{
-                                background: "rgba(255,100,100,0.2) ", color: '#ffb3b3'
-                            }} onClick={() => navigate('/dashboard')}>
+                        
+                        <div className="add-pet-actions">
+                            <button type="button" className='btn-cancel' onClick={() => navigate('/dashboard')}>
                                 Cancel
                             </button>
-                            <button type="submit" className='submit-pet-btn'>
+                            <button type="submit" className='btn-save'>
                                 Save Pet Profile
                             </button>
                         </div>

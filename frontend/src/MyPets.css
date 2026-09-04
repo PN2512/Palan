@@ -1,0 +1,114 @@
+/* =========================================
+   1. Dashboard / My Pets Base Layout
+   ========================================= */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a, #312e81, #1e1b4b);
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+}
+
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* =========================================
+   2. The Pet Grid & Glass Cards
+   ========================================= */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Auto-wraps on mobile */
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.dash-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* ✨ HOVER EFFECT: Lifts the card up slightly ✨ */
+.dash-card:hover {
+    transform: translateY(-8px); 
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4); 
+    border-color: rgba(255, 255, 255, 0.3); 
+}
+
+/* =========================================
+   3. Animated Interactive Buttons
+   ========================================= */
+
+/* The solid white "+ Add New Pet" button */
+.btn-primary {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: none;
+    background: white;
+    color: #1e1b4b;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary:active {
+    transform: scale(0.95);
+}
+
+/* The transparent "Back to Dashboard" button */
+.btn-secondary {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+    transform: scale(0.95);
+}
+
+/* The red "Remove Pet" button */
+.btn-danger {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 100, 100, 0.3);
+    background: rgba(255, 100, 100, 0.1);
+    color: #ffb3b3;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: rgba(255, 100, 100, 0.2);
+    border-color: rgba(255, 100, 100, 0.5);
+    color: #ffcccc;
+    transform: translateY(-2px);
+}
+
+.btn-danger:active {
+    transform: scale(0.95);
+}
