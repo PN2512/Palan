@@ -104,12 +104,12 @@ const AddPet = () => {
                                 className="add-pet-input"
                             >
                                 <option value="" disabled>Select Species</option>
-                                <option value="Dog">Dog</option>
-                                <option value="Cat">Cat</option>
-                                <option value="Bird">Bird</option>
-                                <option value="Reptile">Reptile</option>
-                                <option value="Small Animal">Small Animal</option>
-                                <option value="Other">Other</option>
+                                <option value="Dog"> 🐕‍🦺Dog</option>
+                                <option value="Cat">🐈Cat</option>
+                                <option value="Bird">🦜Bird</option>
+                                <option value="Reptile">🐊Reptile</option>
+                                <option value="Small Animal">🦋Small Animal</option>
+                                <option value="Other">🐚Other</option>
                             </select>
                         </div>
                         <div className='add-pet-form-group'>

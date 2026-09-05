@@ -10,6 +10,10 @@ const petSchema = new mongoose.Schema({
         type:String,
         default:'Cat' // Sets the default to feline
     },
+    age:{
+        type:String,
+        trim:true
+    },
     ownerId:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'User',

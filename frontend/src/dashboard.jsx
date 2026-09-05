@@ -6,20 +6,31 @@ import './Dashboard.css';
 const Dashboard = () => {
     const navigate = useNavigate();
     const [pets, setPets] = useState([]);
+    const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(true);
-    // State to track if the mobile sidebar is open
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [activeAlert, setActiveAlert] = useState(null);
 
-    // Fetch pets as soon as the dashboard loads
-    useEffect(() => {
-        const fetchPets = async () => {
+ useEffect(() => {
+        const fetchDashboardData = async () => {
             const token = localStorage.getItem('authToken');
-
-            // If they somehow get here without a token, kick them to login
             if (!token) {
                 navigate('/login');
-                return; // Stop execution
+                return;
             }
+
+            // 1. Load cached pets and schedules instantly from localStorage so they never "disappear"
+            const savedPets = localStorage.getItem('palan_pets');
+            if (savedPets) {
+                setPets(JSON.parse(savedPets));
+            }
+
+            const savedSchedules = localStorage.getItem('palan_schedules');
+            if (savedSchedules) {
+                setSchedules(JSON.parse(savedSchedules));
+            }
+
+            // 2. Fetch fresh pets from MongoDB backend
             try {
                 const response = await fetch('http://localhost:5000/api/pets', {
                     method: 'GET',
@@ -29,18 +40,44 @@ const Dashboard = () => {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setPets(data); // save the fetched pets to state
+                    setPets(data);
+                    // Cache the fresh data locally
+                    localStorage.setItem('palan_pets', JSON.stringify(data));
+                } else if (response.status === 401 || response.status === 400) {
+                    // Token expired or invalid, send back to login
+                    navigate('/login');
                 } else {
                     console.error("Failed to fetch pets");
                 }
             } catch (error) {
-                console.error("Error connecting to server:", error);
+                console.error("Error connecting to server (using cached data if available):", error);
             } finally {
-                setLoading(false); // stop the loading text
+                setLoading(false);
             }
         };
-        fetchPets();
+
+        fetchDashboardData();
     }, [navigate]);
+
+    useEffect(() => {
+        if (!schedules || schedules.length === 0) return;
+
+        const checkSchedules = () => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTime = `${hours}:${minutes}`;
+
+            const dueMeal = schedules.find(meal => meal.time === currentTime);
+
+            if (dueMeal && (!activeAlert || activeAlert.id !== dueMeal.id)) {
+                setActiveAlert(dueMeal);
+            }
+        };
+
+        const interval = setInterval(checkSchedules, 1000);
+        return () => clearInterval(interval);
+    }, [schedules, activeAlert]);
 
     const handleLogout = () => {
         localStorage.removeItem('authToken');
@@ -50,23 +87,66 @@ const Dashboard = () => {
     return (
         <div className="dashboard-container">
             
-            {/* 1. Mobile Overlay: Closes menu when clicking outside */}
+
+            {activeAlert && (
+                <div style={{
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                    color: '#fff',
+                    padding: '20px 25px',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
+                    zIndex: 1000,
+                    animation: 'slideIn 0.4s ease-out',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    minWidth: '280px'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <strong style={{ fontSize: '16px' }}>🚨 Feeding Time!</strong>
+                        <span style={{ cursor: 'pointer', fontSize: '18px' }} onClick={() => setActiveAlert(null)}>✕</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '14px' }}>
+                        Time to feed <strong>{activeAlert.petName}</strong>: {activeAlert.food}
+                    </p>
+                    <button 
+                        onClick={() => {
+                            const updated = schedules.filter(m => m.id !== activeAlert.id);
+                            setSchedules(updated);
+                            localStorage.setItem('palan_schedules', JSON.stringify(updated));
+                            setActiveAlert(null);
+                        }}
+                        style={{
+                            marginTop: '5px',
+                            background: '#fff',
+                            color: '#4f46e5',
+                            border: 'none',
+                            padding: '8px',
+                            borderRadius: '6px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Mark as Done & Dismiss
+                    </button>
+                </div>
+            )}
+
             {isSidebarOpen && (
                 <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
             )}
 
-            {/* the new master toggle button (movile only) */}
             <button
-             className="mobile-toggle-btn"
-             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+               className="mobile-toggle-btn"
+               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
                 {isSidebarOpen ? '✕' : '☰'}
             </button>
 
             <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
-                
-               
-
                 <div className='sidebar-logo' style={{ display: 'flex', alignItems: 'center', paddingLeft: '10px' , marginTop:'60px' }}>
                     <img
                         src={myLogo}
@@ -94,10 +174,8 @@ const Dashboard = () => {
                 </div>
             </aside>
 
-            {/* 3. Main DashBoard Content */}
             <main className='main-content'>
                 <header className='dashboard-header' style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                
                     <div>
                         <h2>Welcome back! 🐣</h2>
                         <p>Here is what is happening with your pet today.</p>
@@ -105,7 +183,6 @@ const Dashboard = () => {
                 </header>
 
                 <div className='dashboard-grid'>
-                    {/* Pet Profile Card */}
                     <div className='dash-card'>
                         <h3>My Pets</h3>
                         <div className='card-content'>
@@ -136,7 +213,6 @@ const Dashboard = () => {
                                 </ul>
                             )}
 
-                            {/* Add Pet Button */}
                             <button onClick={() => navigate('/add-pet')}
                                 style={{
                                     marginTop: '15px', padding: '10px 15px', borderRadius: '8px', border: 'none',
@@ -148,22 +224,27 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Feeding Reminder Card */}
                     <div className='dash-card'>
                         <h3>Upcoming Feedings</h3>
                         <div className='card-content'>
-                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <li style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px' }}>
-                                    <strong>Morning Meal</strong> - 8:00 AM
-                                </li>
-                                <li style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px' }}>
-                                    <strong>Evening Meal</strong>  - 6:00 PM
-                                </li>
-                            </ul>
+                            {schedules.length === 0 ? (
+                                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No feeding schedules added yet.</p>
+                            ) : (
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {schedules.slice(0, 3).map((meal) => (
+                                        <li key={meal.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #6366f1' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <strong>{meal.petName}</strong>
+                                                <span style={{ color: '#818cf8', fontWeight: 'bold' }}>{meal.time}</span>
+                                            </div>
+                                            <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{meal.food}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     </div>
 
-                    {/* Husbandry / Care Schedule Card */}
                     <div className='dash-card'>
                         <h3>Husbandry Tasks</h3>
                         <div className='card-content'>
