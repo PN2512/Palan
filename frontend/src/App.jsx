@@ -6,6 +6,7 @@ import Dashboard from './Dashboard';
 import AddPet from './AddPet';
 import MyPets from './MyPets';
 import Feeding from './Feeding';
+import HusbandryTasks from './HusbandryTasks';
 
 // Route protection wrapper
 const SignedInRoute = ({ children }) => {
@@ -22,8 +23,8 @@ function App() {
       <Route path="/dashboard" element={<SignedInRoute><Dashboard /></SignedInRoute>} />
       <Route path="/add-pet" element={<SignedInRoute><AddPet /></SignedInRoute>} />
       <Route path="/my-pets" element={<SignedInRoute><MyPets /></SignedInRoute>}/>
-      {/* Fixed: capitalized <Feeding /> and wrapped with <SignedInRoute> */}
       <Route path="/feeding-schedule" element={<SignedInRoute><Feeding /></SignedInRoute>} />
+      <Route path="/husbandry-tasks" element={<SignedInRoute><HusbandryTasks /></SignedInRoute>} />
     </Routes>
   );
 }

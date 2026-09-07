@@ -7,11 +7,12 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [pets, setPets] = useState([]);
     const [schedules, setSchedules] = useState([]);
+    const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeAlert, setActiveAlert] = useState(null);
 
- useEffect(() => {
+    useEffect(() => {
         const fetchDashboardData = async () => {
             const token = localStorage.getItem('authToken');
             if (!token) {
@@ -19,38 +20,29 @@ const Dashboard = () => {
                 return;
             }
 
-            // 1. Load cached pets and schedules instantly from localStorage so they never "disappear"
             const savedPets = localStorage.getItem('palan_pets');
-            if (savedPets) {
-                setPets(JSON.parse(savedPets));
-            }
+            if (savedPets) setPets(JSON.parse(savedPets));
 
             const savedSchedules = localStorage.getItem('palan_schedules');
-            if (savedSchedules) {
-                setSchedules(JSON.parse(savedSchedules));
-            }
+            if (savedSchedules) setSchedules(JSON.parse(savedSchedules));
 
-            // 2. Fetch fresh pets from MongoDB backend
+            const savedTasks = localStorage.getItem('palan_husbandry');
+            if (savedTasks) setTasks(JSON.parse(savedTasks));
+
             try {
                 const response = await fetch('http://localhost:5000/api/pets', {
                     method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
                     const data = await response.json();
                     setPets(data);
-                    // Cache the fresh data locally
                     localStorage.setItem('palan_pets', JSON.stringify(data));
                 } else if (response.status === 401 || response.status === 400) {
-                    // Token expired or invalid, send back to login
                     navigate('/login');
-                } else {
-                    console.error("Failed to fetch pets");
                 }
             } catch (error) {
-                console.error("Error connecting to server (using cached data if available):", error);
+                console.error("Error connecting to server:", error);
             } finally {
                 setLoading(false);
             }
@@ -59,25 +51,28 @@ const Dashboard = () => {
         fetchDashboardData();
     }, [navigate]);
 
+    // Timer check for both Feedings and Husbandry Tasks
     useEffect(() => {
-        if (!schedules || schedules.length === 0) return;
-
-        const checkSchedules = () => {
+        const interval = setInterval(() => {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const currentTime = `${hours}:${minutes}`;
 
+            // Check feeding schedules
             const dueMeal = schedules.find(meal => meal.time === currentTime);
+            // Check husbandry tasks
+            const dueTask = tasks.find(task => task.time === currentTime);
 
             if (dueMeal && (!activeAlert || activeAlert.id !== dueMeal.id)) {
-                setActiveAlert(dueMeal);
+                setActiveAlert({ ...dueMeal, alertType: 'feeding' });
+            } else if (dueTask && (!activeAlert || activeAlert.id !== dueTask.id)) {
+                setActiveAlert({ ...dueTask, alertType: 'husbandry' });
             }
-        };
+        }, 1000);
 
-        const interval = setInterval(checkSchedules, 1000);
         return () => clearInterval(interval);
-    }, [schedules, activeAlert]);
+    }, [schedules, tasks, activeAlert]);
 
     const handleLogout = () => {
         localStorage.removeItem('authToken');
@@ -86,14 +81,14 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard-container">
-            
-
             {activeAlert && (
                 <div style={{
                     position: 'fixed',
                     top: '20px',
                     right: '20px',
-                    background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                    background: activeAlert.alertType === 'feeding' 
+                        ? 'linear-gradient(135deg, #6366f1, #a855f7)' 
+                        : 'linear-gradient(135deg, #0ea5e9, #2dd4bf)',
                     color: '#fff',
                     padding: '20px 25px',
                     borderRadius: '12px',
@@ -106,23 +101,34 @@ const Dashboard = () => {
                     minWidth: '280px'
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ fontSize: '16px' }}>🚨 Feeding Time!</strong>
+                        <strong style={{ fontSize: '16px' }}>
+                            {activeAlert.alertType === 'feeding' ? '🚨 Feeding Time!' : '🛁 Care Task Due!'}
+                        </strong>
                         <span style={{ cursor: 'pointer', fontSize: '18px' }} onClick={() => setActiveAlert(null)}>✕</span>
                     </div>
                     <p style={{ margin: 0, fontSize: '14px' }}>
-                        Time to feed <strong>{activeAlert.petName}</strong>: {activeAlert.food}
+                        {activeAlert.alertType === 'feeding' 
+                            ? `Time to feed ${activeAlert.petName}: ${activeAlert.food}`
+                            : `Task for ${activeAlert.petName}: ${activeAlert.taskName}`
+                        }
                     </p>
                     <button 
                         onClick={() => {
-                            const updated = schedules.filter(m => m.id !== activeAlert.id);
-                            setSchedules(updated);
-                            localStorage.setItem('palan_schedules', JSON.stringify(updated));
+                            if (activeAlert.alertType === 'feeding') {
+                                const updated = schedules.filter(m => m.id !== activeAlert.id);
+                                setSchedules(updated);
+                                localStorage.setItem('palan_schedules', JSON.stringify(updated));
+                            } else {
+                                const updated = tasks.filter(t => t.id !== activeAlert.id);
+                                setTasks(updated);
+                                localStorage.setItem('palan_husbandry', JSON.stringify(updated));
+                            }
                             setActiveAlert(null);
                         }}
                         style={{
                             marginTop: '5px',
                             background: '#fff',
-                            color: '#4f46e5',
+                            color: '#1e1b4b',
                             border: 'none',
                             padding: '8px',
                             borderRadius: '6px',
@@ -248,24 +254,26 @@ const Dashboard = () => {
                     <div className='dash-card'>
                         <h3>Husbandry Tasks</h3>
                         <div className='card-content'>
-                            <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <li style={{
-                                    background: 'rgba(255,255,255,0.05)',
-                                    padding: '10px',
-                                    borderRadius: '8px',
-                                    borderLeft: '4px solid #4ca1af'
-                                }}>
-                                    Clean enclosure
-                                </li>
-                                <li style={{
-                                    background: 'rgba(255,255,255,0.05)',
-                                    padding: '10px',
-                                    borderRadius: '8px',
-                                    borderLeft: '4px solid #ffb3be'
-                                }}>
-                                    Administer Medication
-                                </li>
-                            </ul>
+                            {tasks.length === 0 ? (
+                                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No husbandry tasks logged.</p>
+                            ) : (
+                                <ul style={{ listStyleType: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {tasks.slice(0, 3).map((task) => (
+                                        <li key={task.id} style={{
+                                            background: 'rgba(255,255,255,0.05)',
+                                            padding: '12px',
+                                            borderRadius: '8px',
+                                            borderLeft: '4px solid #4ca1af'
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <strong>{task.petName}</strong>
+                                                <span style={{ color: '#7be0f3', fontWeight: 'bold' }}>{task.time}</span>
+                                            </div>
+                                            <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{task.taskName}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     </div>
                 </div>
