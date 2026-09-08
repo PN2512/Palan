@@ -10,7 +10,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
+  const handleLogin = async (e) => {
         e.preventDefault();
         try {
             const response = await fetch('http://localhost:5000/api/auth/login', {
@@ -22,6 +22,8 @@ const Login = () => {
 
             if (response.ok) {
                 localStorage.setItem('authToken', data.token);
+                // Save the user's name right here so the dashboard can display it
+                localStorage.setItem('userName', data.name || data.user?.name || 'User');
                 setError('');
                 navigate('/dashboard');
             } else {

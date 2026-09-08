@@ -136,6 +136,11 @@ body,html{
     line-height: 1.5;
 
 }
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Creates 3 even columns across the screen */
+    gap: 20px;
+}
 
 /* --- Default Desktop Styles --- */
 .mobile-toggle-btn {
@@ -175,6 +180,7 @@ body,html{
     .sidebar.open {
         transform: translateX(0); 
     }
+
 
     .sidebar-overlay {
         display: block;
