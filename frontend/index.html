@@ -6,7 +6,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Palan | Pet Care Companion</title>
-</head>
+    <!-- 👇 Moved to head so it loads before React mounts -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

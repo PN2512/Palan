@@ -29,13 +29,18 @@ const Dashboard = () => {
             const savedPets = localStorage.getItem('palan_pets');
             if (savedPets) setPets(JSON.parse(savedPets));
 
+            // 👇 FIX: Actually load saved schedules into state
             const savedSchedules = localStorage.getItem('palan_schedules');
-            if (savedSchedules) setSchedules(JSON.parse(savedSchedules));
-
-            const savedTasks = localStorage.getItem('palan_husbandry');
-            if (savedTasks) setTasks(JSON.parse(savedTasks));
+            if (savedSchedules) {
+                try {
+                    setSchedules(JSON.parse(savedSchedules));
+                } catch (e) {
+                    console.error("Error parsing saved schedules", e);
+                }
+            }
 
             try {
+                // Fetch Pets from backend
                 const petResponse = await fetch('http://localhost:5000/api/pets', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -44,6 +49,16 @@ const Dashboard = () => {
                     const data = await petResponse.json();
                     setPets(data);
                     localStorage.setItem('palan_pets', JSON.stringify(data));
+                }
+
+                // Fetch Tasks from backend
+                const taskResponse = await fetch('http://localhost:5000/api/tasks', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (taskResponse.ok) {
+                    const taskData = await taskResponse.json();
+                    setTasks(taskData);
                 }
             } catch (error) {
                 console.error("Error connecting to server:", error);
@@ -55,7 +70,7 @@ const Dashboard = () => {
         fetchDashboardData();
     }, [navigate]);
 
-    // Timer check for Feedings and Husbandry Tasks
+    // Timer check for Feedings and Tasks
     useEffect(() => {
         const interval = setInterval(() => {
             const now = new Date();
@@ -64,11 +79,11 @@ const Dashboard = () => {
             const currentTime = `${hours}:${minutes}`;
 
             const dueMeal = schedules.find(meal => meal.time === currentTime);
-            const dueTask = tasks.find(task => task.time === currentTime);
+            const dueTask = tasks.find(task => task.time === currentTime && !task.completed);
 
             if (dueMeal && (!activeAlert || activeAlert.id !== dueMeal.id)) {
                 setActiveAlert({ ...dueMeal, alertType: 'feeding' });
-            } else if (dueTask && (!activeAlert || activeAlert.id !== dueTask.id)) {
+            } else if (dueTask && (!activeAlert || activeAlert._id !== dueTask._id)) {
                 setActiveAlert({ ...dueTask, alertType: 'husbandry' });
             }
         }, 1000);
@@ -76,7 +91,24 @@ const Dashboard = () => {
         return () => clearInterval(interval);
     }, [schedules, tasks, activeAlert]);
 
-    // 👈 handleLogout function added back here
+    const toggleTaskCompletion = async (taskId) => {
+        try {
+            const token = localStorage.getItem('authToken');
+            const res = await fetch(`http://localhost:5000/api/tasks/${taskId}/toggle`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (res.ok) {
+                const updatedTask = await res.json();
+                setTasks(tasks.map(t => t._id === taskId ? updatedTask : t));
+            }
+        } catch (err) {
+            console.error('Failed to update task status');
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('userName');
@@ -141,7 +173,7 @@ const Dashboard = () => {
                 )}
             </div>
 
-            {/* 3. Feeding & Task Popup Alerts */}
+            {/* 3. Popup Alerts for Feedings and Tasks */}
             {activeAlert && (
                 <div style={{
                     position: 'fixed', top: '20px', right: '270px',
@@ -150,18 +182,18 @@ const Dashboard = () => {
                         : 'linear-gradient(135deg, #0ea5e9, #2dd4bf)',
                     color: '#fff', padding: '20px 25px', borderRadius: '12px',
                     boxShadow: '0 10px 25px rgba(0,0,0,0.4)', zIndex: 1000,
-                    animation: 'slideIn 0.4s ease-out', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '280px'
+                    display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '280px'
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <strong style={{ fontSize: '16px' }}>
-                            {activeAlert.alertType === 'feeding' ? '🚨 Feeding Time!' : '🛁 Care Task Due!'}
+                            {activeAlert.alertType === 'feeding' ? '🚨 Feeding Time!' : '🐾 Care Task Due!'}
                         </strong>
                         <span style={{ cursor: 'pointer', fontSize: '18px' }} onClick={() => setActiveAlert(null)}>✕</span>
                     </div>
                     <p style={{ margin: 0, fontSize: '14px' }}>
                         {activeAlert.alertType === 'feeding' 
                             ? `Time to feed ${activeAlert.petName}: ${activeAlert.food}`
-                            : `Task for ${activeAlert.petName}: ${activeAlert.taskName}`
+                            : `Task due: ${activeAlert.title}`
                         }
                     </p>
                     <button 
@@ -171,9 +203,7 @@ const Dashboard = () => {
                                 setSchedules(updated);
                                 localStorage.setItem('palan_schedules', JSON.stringify(updated));
                             } else {
-                                const updated = tasks.filter(t => t.id !== activeAlert.id);
-                                setTasks(updated);
-                                localStorage.setItem('palan_husbandry', JSON.stringify(updated));
+                                toggleTaskCompletion(activeAlert._id);
                             }
                             setActiveAlert(null);
                         }}
@@ -225,7 +255,7 @@ const Dashboard = () => {
                                 style={{
                                     marginTop: '15px', padding: '10px 15px', borderRadius: '8px', border: 'none',
                                     background: "white", color: "#1e1b4b", cursor: "pointer", fontWeight: "bold",
-                                    width: pets.length > 0 ? '100%' : 'auto'
+                                    width: pets.length > 0 ? '100%': 'auto'
                                 }}>
                                 + Add a Pet
                             </button>
@@ -261,17 +291,24 @@ const Dashboard = () => {
                             {tasks.length === 0 ? (
                                 <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No husbandry tasks logged.</p>
                             ) : (
-                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {tasks.slice(0, 3).map((task) => (
-                                        <li key={task.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #4ca1af' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <strong>{task.petName}</strong>
-                                                <span style={{ color: '#7be0f3', fontWeight: 'bold' }}>{task.time}</span>
+                                <div className="reminders-container" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {tasks.map(task => (
+                                        <div key={task._id} className="task-item" style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #4ca1af', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={task.completed} 
+                                                onChange={() => toggleTaskCompletion(task._id)}
+                                                style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                                            />
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? '#94a3b8' : '#fff', fontWeight: 'bold', fontSize: '14px' }}>
+                                                    {task.title}
+                                                </span>
+                                                <span style={{ fontSize: '12px', color: '#7be0f3' }}>Time: {task.time}</span>
                                             </div>
-                                            <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{task.taskName}</span>
-                                        </li>
+                                        </div>
                                     ))}
-                                </ul>
+                                </div>
                             )}
                         </div>
                     </div>
