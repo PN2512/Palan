@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import myLogo from './assets/logo.png';
-import Sidebar from './Sidebar'; // 👈 Import the new reusable sidebar
+import Sidebar from './Sidebar';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -18,7 +18,73 @@ const Dashboard = () => {
     const [activeAlert, setActiveAlert] = useState(null);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-    // ... (keep your useEffect hooks and handleLogout code here)
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            const savedPets = localStorage.getItem('palan_pets');
+            if (savedPets) setPets(JSON.parse(savedPets));
+
+            const savedSchedules = localStorage.getItem('palan_schedules');
+            if (savedSchedules) setSchedules(JSON.parse(savedSchedules));
+
+            const savedTasks = localStorage.getItem('palan_husbandry');
+            if (savedTasks) setTasks(JSON.parse(savedTasks));
+
+            try {
+                const petResponse = await fetch('http://localhost:5000/api/pets', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (petResponse.ok) {
+                    const data = await petResponse.json();
+                    setPets(data);
+                    localStorage.setItem('palan_pets', JSON.stringify(data));
+                }
+            } catch (error) {
+                console.error("Error connecting to server:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, [navigate]);
+
+    // Timer check for Feedings and Husbandry Tasks
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTime = `${hours}:${minutes}`;
+
+            const dueMeal = schedules.find(meal => meal.time === currentTime);
+            const dueTask = tasks.find(task => task.time === currentTime);
+
+            if (dueMeal && (!activeAlert || activeAlert.id !== dueMeal.id)) {
+                setActiveAlert({ ...dueMeal, alertType: 'feeding' });
+            } else if (dueTask && (!activeAlert || activeAlert.id !== dueTask.id)) {
+                setActiveAlert({ ...dueTask, alertType: 'husbandry' });
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [schedules, tasks, activeAlert]);
+
+    // 👈 handleLogout function added back here
+    const handleLogout = () => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('palan_pets');
+        localStorage.removeItem('palan_schedules');
+        localStorage.removeItem('palan_husbandry');
+        navigate('/login');
+    };
 
     const userInitial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
 
@@ -123,7 +189,93 @@ const Dashboard = () => {
 
             {/* 4. Main Content Area */}
             <main className='main-content'>
-               {/* Your grid cards go here */}
+                <header className='dashboard-header' style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div>
+                        <h2>Welcome back! 🐣</h2>
+                        <p>Here is what is happening with your pet today.</p>
+                    </div>
+                </header>
+
+                <div className='dashboard-grid'>
+                    {/* Column 1: My Pets */}
+                    <div className='dash-card'>
+                        <h3>My Pets</h3>
+                        <div className='card-content'>
+                            {loading ? (
+                                <p>Loading your pets...</p>
+                            ) : pets.length === 0 ? (
+                                <p>You haven't added any pet profiles yet.</p>
+                            ) : (
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {pets.map(pet => (
+                                        <li key={pet._id} style={{
+                                            background: 'rgba(255,255,255,0.05)', padding: '12px',
+                                            borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                        }}>
+                                            <div>
+                                                <strong style={{ fontSize: '16px' }}>{pet.name}</strong>
+                                                <span style={{ display: 'block', fontSize: '12px', color: '#cbd5e1' }}>{pet.species}</span>
+                                            </div>
+                                            {pet.age && <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Age: {pet.age}</span>}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            <button onClick={() => navigate('/add-pet')}
+                                style={{
+                                    marginTop: '15px', padding: '10px 15px', borderRadius: '8px', border: 'none',
+                                    background: "white", color: "#1e1b4b", cursor: "pointer", fontWeight: "bold",
+                                    width: pets.length > 0 ? '100%' : 'auto'
+                                }}>
+                                + Add a Pet
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Column 2: Upcoming Feedings */}
+                    <div className='dash-card'>
+                        <h3>Upcoming Feedings</h3>
+                        <div className='card-content'>
+                            {schedules.length === 0 ? (
+                                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No feeding schedules added yet.</p>
+                            ) : (
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {schedules.slice(0, 3).map((meal) => (
+                                        <li key={meal.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #6366f1' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <strong>{meal.petName}</strong>
+                                                <span style={{ color: '#818cf8', fontWeight: 'bold' }}>{meal.time}</span>
+                                            </div>
+                                            <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{meal.food}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Column 3: Husbandry Tasks */}
+                    <div className='dash-card'>
+                        <h3>Husbandry Tasks</h3>
+                        <div className='card-content'>
+                            {tasks.length === 0 ? (
+                                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No husbandry tasks logged.</p>
+                            ) : (
+                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {tasks.slice(0, 3).map((task) => (
+                                        <li key={task.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #4ca1af' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <strong>{task.petName}</strong>
+                                                <span style={{ color: '#7be0f3', fontWeight: 'bold' }}>{task.time}</span>
+                                            </div>
+                                            <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{task.taskName}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     );

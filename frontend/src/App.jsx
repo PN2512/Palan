@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
 import Signup from './Signup';
-import Dashboard from './Dashboard'; 
+import Dashboard from './dashboard'; 
 import AddPet from './AddPet';
 import MyPets from './MyPets';
 import Feeding from './Feeding';
