@@ -210,3 +210,92 @@ body,html{
         opacity: 1;
     }
 }
+
+
+
+/* --- Fix Google One Tap Popup Overlap on Mobile --- */
+#credential_picker_container {
+    top: 80px !important;    /* Pushes it below your top menu button */
+    left: 20px !important;   /* Adds a clean margin from the left edge */
+    right: 20px !important;  /* Prevents it from overflowing the screen width */
+    max-width: calc(100vw - 40px) !important;
+}
+
+@media (max-width: 768px) {
+    #credential_picker_container {
+        top: 75px !important;
+        left: 15px !important;
+        right: 15px !important;
+    }
+}
+
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+
+
+/* --- Bulletproof Bottom-Center Fix for Feeding Time Popup --- */
+@media (max-width: 1024px) {
+    div:has(> * > h3:contains("Feeding Time")),
+    div:has(> h3:contains("Feeding Time")),
+    div:has(.fa-utensils) {
+        position: fixed !important;
+        top: auto !important;
+        bottom: 25px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 90% !important;
+        max-width: 380px !important;
+        z-index: 999999 !important;
+    }
+}
+
+
+/* --- Direct & Valid Bottom-Center Fix for Feeding Popup --- */
+@media (max-width: 1024px) {
+    .feeding-popup-modal {
+        position: fixed !important;
+        top: auto !important;
+        bottom: 20px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: 90% !important;
+        max-width: 380px !important;
+        z-index: 999999 !important;
+    }
+}
+
+/* --- Definitive Bottom-Center Fix for Dashboard Alert Popup --- */
+.dashboard-active-alert {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 380px !important;
+    z-index: 99999 !important;
+}
+
+@media (min-width: 1025px) {
+    .dashboard-active-alert {
+        top: 20px !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: 270px !important;
+        transform: none !important;
+        width: auto !important;
+    }
+}

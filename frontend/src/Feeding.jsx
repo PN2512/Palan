@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+
 import './Dashboard.css';
 
 const Feeding = () => {
@@ -24,7 +25,10 @@ const Feeding = () => {
 
         const fetchPets = async () => {
             const token = localStorage.getItem('authToken');
-            if (!token) return;
+            if (!token) {
+                navigate('/login');
+                return;
+            }
             try {
                 const response = await fetch('http://localhost:5000/api/pets', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -33,13 +37,16 @@ const Feeding = () => {
                     const data = await response.json();
                     setPets(data);
                     if (data.length > 0) setSelectedPet(data[0].name);
+                } else if (response.status === 401) {
+                    localStorage.removeItem('authToken');
+                    navigate('/login');
                 }
             } catch (error) {
                 console.error('Error fetching pets:', error);
             }
         };
         fetchPets();
-    }, []);
+    }, [navigate]);
 
     const handleDeleteSchedule = (id) => {
         const updatedSchedules = schedules.filter(meal => meal.id !== id);
@@ -189,7 +196,7 @@ const Feeding = () => {
                                 <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No schedules added yet.</p>
                             ) : (
                                 schedules.map((meal) => (
-                                    <div key={meal.id} style={{
+                                    <div key={meal.id} className="feeding-schedule-item" style={{
                                         background: 'rgba(255,255,255,0.05)',
                                         padding: '15px',
                                         borderRadius: '12px',

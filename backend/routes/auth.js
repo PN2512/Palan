@@ -6,6 +6,7 @@ const User = require('../models/User');
 const router = express.Router();
 
 // Sign-up a new user (POST /api/auth/signup)
+// Updated Backend Signup Route (/api/auth/signup)
 router.post('/signup', async (req, res) => {
     try {
         const { name, email, password } = req.body; 
@@ -26,7 +27,21 @@ router.post('/signup', async (req, res) => {
 
         await user.save();
 
-        res.status(201).json({ message: 'User created Successfully!' });
+        // 👇 CREATE THE JWT TOKEN ON SIGNUP JUST LIKE LOGIN
+        const payload = { userId: user._id };
+        const token = jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret_key', {
+            expiresIn: '1h'
+        });
+
+        res.status(201).json({ 
+            message: 'User created Successfully!',
+            token: token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email
+            }
+        });
     } catch (error) {
         console.error('Signup error:', error.message);
         res.status(500).json({ message: 'Server error during signup' });

@@ -16,18 +16,35 @@ const MyPets = () => {
 
     const fetchPets = async () => {
         const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+            console.warn('No token found in localStorage');
+            navigate('/login');
+            return;
+        }
+
         try {
             const response = await fetch('http://localhost:5000/api/pets', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
             });
+
             if (response.ok) {
                 const data = await response.json();
                 setPets(data);
+            } else if (response.status === 401) {
+                // Token is invalid or expired
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userName');
+                navigate('/login');
             } else {
-                console.error("Failed to fetch. Backend blocked it!");
+                console.error('Backend blocked it!');
             }
         } catch (error) {
-            console.error('Error fetching pets:', error);
+            console.error('Failed to fetch pets:', error);
         } finally {
             setLoading(false);
         }
@@ -35,18 +52,30 @@ const MyPets = () => {
 
     useEffect(() => {
         fetchPets();
-    }, []);
+    }, [navigate]);
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to remove this pet profile?")) return;
         const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
         try {
             const response = await fetch(`http://localhost:5000/api/pets/${id}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                }
             });
             if (response.ok) {
                 setPets(pets.filter(p => p._id !== id));
+            } else if (response.status === 401) {
+                localStorage.removeItem('authToken');
+                navigate('/login');
             }
         } catch (error) {
             console.error('Error deleting pet:', error);

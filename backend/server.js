@@ -3,30 +3,37 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-const authRoutes = require('./routes/auth');
-const petRoutes = require('./routes/pets');
-const taskRoutes = require('./routes/tasks');
-
 const app = express();
+
+// 1. Critical CORS configuration to allow Authorization headers from your frontend
+app.use(cors({
+    origin: 'http://localhost:5173', // Change to 'http://localhost:3000' if your React app runs on port 3000
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
+// 2. Body parser middleware to handle JSON requests
 app.use(express.json());
-app.use(cors());
 
-console.log("Starting Palan backend server...");
-
-app.use('/api/auth', authRoutes);
-app.use('/api/pets',petRoutes);
-app.use('/api/tasks', taskRoutes);
-
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
-
+// 3. Connect to MongoDB Atlas (or local database)
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/palan';
 mongoose.connect(MONGO_URI)
-    .then(() => {
-        console.log('Successfully connected to MongoDB Atlas');
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-        });
-    })
-    .catch(err => {
-        console.error('MongoDB connection error:', err.message);
-    });
+    .then(() => console.log('🟢 MongoDB Connected Successfully'))
+    .catch((err) => console.error('🔴 MongoDB Connection Error:', err.message));
+
+// 4. Register your API Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/pets', require('./routes/pets'));
+app.use('/api/tasks', require('./routes/tasks'));
+
+// 5. Root endpoint test
+app.get('/', (req, res) => {
+    res.send('Palan API is running successfully!');
+});
+
+// 6. Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});

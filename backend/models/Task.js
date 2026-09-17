@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const taskSchema = new mongoose.Schema({
-    petId: { type: mongoose.Schema.Types.ObjectId, ref: 'Pet', required: true },
+    petId: { type: String, required: true }, // Changed from ObjectId to String
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     title: { type: String, required: true },
     time: { type: String, required: true },

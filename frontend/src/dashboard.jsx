@@ -18,6 +18,30 @@ const Dashboard = () => {
     const [activeAlert, setActiveAlert] = useState(null);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
 
+    // Helper function to play a gentle notification chime using Web Audio API
+    const playNotificationSound = () => {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
+            oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5 note
+
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        } catch (e) {
+            console.log('Audio Context not allowed yet or not supported');
+        }
+    };
+
     useEffect(() => {
         const fetchDashboardData = async () => {
             const token = localStorage.getItem('authToken');
@@ -29,7 +53,6 @@ const Dashboard = () => {
             const savedPets = localStorage.getItem('palan_pets');
             if (savedPets) setPets(JSON.parse(savedPets));
 
-            // 👇 FIX: Actually load saved schedules into state
             const savedSchedules = localStorage.getItem('palan_schedules');
             if (savedSchedules) {
                 try {
@@ -70,7 +93,7 @@ const Dashboard = () => {
         fetchDashboardData();
     }, [navigate]);
 
-    // Timer check for Feedings and Tasks
+    // Timer check for Feedings and Tasks with audio alert trigger
     useEffect(() => {
         const interval = setInterval(() => {
             const now = new Date();
@@ -78,13 +101,15 @@ const Dashboard = () => {
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const currentTime = `${hours}:${minutes}`;
 
-            const dueMeal = schedules.find(meal => meal.time === currentTime);
-            const dueTask = tasks.find(task => task.time === currentTime && !task.completed);
+            const dueMeal = schedules?.find(meal => meal?.time === currentTime);
+            const dueTask = tasks?.find(task => task?.time === currentTime && !task?.completed);
 
-            if (dueMeal && (!activeAlert || activeAlert.id !== dueMeal.id)) {
+            if (dueMeal && (!activeAlert || activeAlert?.id !== dueMeal?.id)) {
                 setActiveAlert({ ...dueMeal, alertType: 'feeding' });
-            } else if (dueTask && (!activeAlert || activeAlert._id !== dueTask._id)) {
+                playNotificationSound();
+            } else if (dueTask && (!activeAlert || activeAlert?._id !== dueTask?._id)) {
                 setActiveAlert({ ...dueTask, alertType: 'husbandry' });
+                playNotificationSound();
             }
         }, 1000);
 
@@ -118,7 +143,7 @@ const Dashboard = () => {
         navigate('/login');
     };
 
-    const userInitial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+    const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
     return (
         <div className="dashboard-container">
@@ -145,7 +170,7 @@ const Dashboard = () => {
                         {userInitial}
                     </div>
                     <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500', paddingRight: '5px' }}>
-                        {user.name}
+                        {user?.name}
                     </span>
                 </div>
 
@@ -157,7 +182,7 @@ const Dashboard = () => {
                         boxShadow: '0 10px 25px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '10px'
                     }}>
                         <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
-                            <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>{user.name}</p>
+                            <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>{user?.name}</p>
                             <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#cbd5e1' }}>Active Account</p>
                         </div>
                         <button 
@@ -173,11 +198,10 @@ const Dashboard = () => {
                 )}
             </div>
 
-            {/* 3. Popup Alerts for Feedings and Tasks */}
+            {/* 3. Popup Alerts for Feedings and Tasks with CSS class for mobile responsiveness */}
             {activeAlert && (
-                <div style={{
-                    position: 'fixed', top: '20px', right: '270px',
-                    background: activeAlert.alertType === 'feeding' 
+                <div className="dashboard-active-alert" style={{
+                    background: activeAlert?.alertType === 'feeding' 
                         ? 'linear-gradient(135deg, #6366f1, #a855f7)' 
                         : 'linear-gradient(135deg, #0ea5e9, #2dd4bf)',
                     color: '#fff', padding: '20px 25px', borderRadius: '12px',
@@ -186,24 +210,24 @@ const Dashboard = () => {
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <strong style={{ fontSize: '16px' }}>
-                            {activeAlert.alertType === 'feeding' ? '🚨 Feeding Time!' : '🐾 Care Task Due!'}
+                            {activeAlert?.alertType === 'feeding' ? '🚨 Feeding Time!' : '🐾 Care Task Due!'}
                         </strong>
                         <span style={{ cursor: 'pointer', fontSize: '18px' }} onClick={() => setActiveAlert(null)}>✕</span>
                     </div>
                     <p style={{ margin: 0, fontSize: '14px' }}>
-                        {activeAlert.alertType === 'feeding' 
-                            ? `Time to feed ${activeAlert.petName}: ${activeAlert.food}`
-                            : `Task due: ${activeAlert.title}`
+                        {activeAlert?.alertType === 'feeding' 
+                            ? `Time to feed ${activeAlert?.petName}: ${activeAlert?.food}`
+                            : `Task due: ${activeAlert?.title}`
                         }
                     </p>
                     <button 
                         onClick={() => {
-                            if (activeAlert.alertType === 'feeding') {
-                                const updated = schedules.filter(m => m.id !== activeAlert.id);
+                            if (activeAlert?.alertType === 'feeding') {
+                                const updated = schedules.filter(m => m?.id !== activeAlert?.id);
                                 setSchedules(updated);
                                 localStorage.setItem('palan_schedules', JSON.stringify(updated));
                             } else {
-                                toggleTaskCompletion(activeAlert._id);
+                                toggleTaskCompletion(activeAlert?._id);
                             }
                             setActiveAlert(null);
                         }}
@@ -233,20 +257,20 @@ const Dashboard = () => {
                         <div className='card-content'>
                             {loading ? (
                                 <p>Loading your pets...</p>
-                            ) : pets.length === 0 ? (
+                            ) : pets?.length === 0 ? (
                                 <p>You haven't added any pet profiles yet.</p>
                             ) : (
                                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {pets.map(pet => (
-                                        <li key={pet._id} style={{
+                                    {pets?.map(pet => (
+                                        <li key={pet?._id} style={{
                                             background: 'rgba(255,255,255,0.05)', padding: '12px',
                                             borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                                         }}>
                                             <div>
-                                                <strong style={{ fontSize: '16px' }}>{pet.name}</strong>
-                                                <span style={{ display: 'block', fontSize: '12px', color: '#cbd5e1' }}>{pet.species}</span>
+                                                <strong style={{ fontSize: '16px' }}>{pet?.name}</strong>
+                                                <span style={{ display: 'block', fontSize: '12px', color: '#cbd5e1' }}>{pet?.species}</span>
                                             </div>
-                                            {pet.age && <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Age: {pet.age}</span>}
+                                            {pet?.age && <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Age: {pet?.age}</span>}
                                         </li>
                                     ))}
                                 </ul>
@@ -255,7 +279,7 @@ const Dashboard = () => {
                                 style={{
                                     marginTop: '15px', padding: '10px 15px', borderRadius: '8px', border: 'none',
                                     background: "white", color: "#1e1b4b", cursor: "pointer", fontWeight: "bold",
-                                    width: pets.length > 0 ? '100%': 'auto'
+                                    width: pets?.length > 0 ? '100%': 'auto'
                                 }}>
                                 + Add a Pet
                             </button>
@@ -266,17 +290,17 @@ const Dashboard = () => {
                     <div className='dash-card'>
                         <h3>Upcoming Feedings</h3>
                         <div className='card-content'>
-                            {schedules.length === 0 ? (
+                            {schedules?.length === 0 ? (
                                 <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No feeding schedules added yet.</p>
                             ) : (
                                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {schedules.slice(0, 3).map((meal) => (
-                                        <li key={meal.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #6366f1' }}>
+                                    {schedules?.slice(0, 3).map((meal) => (
+                                        <li key={meal?.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #6366f1' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <strong>{meal.petName}</strong>
-                                                <span style={{ color: '#818cf8', fontWeight: 'bold' }}>{meal.time}</span>
+                                                <strong>{meal?.petName}</strong>
+                                                <span style={{ color: '#818cf8', fontWeight: 'bold' }}>{meal?.time}</span>
                                             </div>
-                                            <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{meal.food}</span>
+                                            <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{meal?.food}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -288,23 +312,23 @@ const Dashboard = () => {
                     <div className='dash-card'>
                         <h3>Husbandry Tasks</h3>
                         <div className='card-content'>
-                            {tasks.length === 0 ? (
+                            {tasks?.length === 0 ? (
                                 <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No husbandry tasks logged.</p>
                             ) : (
                                 <div className="reminders-container" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {tasks.map(task => (
-                                        <div key={task._id} className="task-item" style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #4ca1af', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    {tasks?.map(task => (
+                                        <div key={task?._id} className="task-item" style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #4ca1af', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                             <input 
                                                 type="checkbox" 
-                                                checked={task.completed} 
-                                                onChange={() => toggleTaskCompletion(task._id)}
+                                                checked={task?.completed} 
+                                                onChange={() => toggleTaskCompletion(task?._id)}
                                                 style={{ cursor: 'pointer', width: '18px', height: '18px' }}
                                             />
                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <span style={{ textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? '#94a3b8' : '#fff', fontWeight: 'bold', fontSize: '14px' }}>
-                                                    {task.title}
+                                                <span style={{ textDecoration: task?.completed ? 'line-through' : 'none', color: task?.completed ? '#94a3b8' : '#fff', fontWeight: 'bold', fontSize: '14px' }}>
+                                                    {task?.title}
                                                 </span>
-                                                <span style={{ fontSize: '12px', color: '#7be0f3' }}>Time: {task.time}</span>
+                                                <span style={{ fontSize: '12px', color: '#7be0f3' }}>Time: {task?.time}</span>
                                             </div>
                                         </div>
                                     ))}
