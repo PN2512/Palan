@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import myLogo from "./assets/logo.png";
 import "./Palan.css";
+import API from './api';
 import "./Login.css"; // Uses the same shared CSS styles
 
 const Signup = () => {
@@ -37,52 +38,38 @@ const Signup = () => {
 
   const handleGoogleResponse = async (response) => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential: response.credential }),
-      });
-      const data = await res.json();
+      // Use API instead of hardcoded fetch
+      const res = await API.post("/api/auth/google", { credential: response.credential });
+      const data = res.data; // Note: axios puts response body in .data
 
-      if (res.ok) {
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem(
-          "userName",
-          data.name || data.user?.name || "User",
-        );
-        setError("");
-        navigate("/dashboard");
-      } else {
-        setError(data.message || "Google signup failed");
-      }
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem(
+        "userName",
+        data.name || data.user?.name || "User",
+      );
+      setError("");
+      navigate("/dashboard");
     } catch (err) {
-      setError("Something went wrong with Google authentication.");
+      setError(err.response?.data?.message || "Something went wrong with Google authentication.");
     }
   };
 
-  const handleSignup = async (e) => {
+ const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: fullName, email, password }),
-      });
-      const data = await response.json();
+      // Use API client which points to your Render backend via VITE_API_URL
+      const response = await API.post("/api/auth/signup", { name: fullName, email, password });
+      const data = response.data; // Axios data payload
 
-      if (response.ok) {
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem(
-          "userName",
-          data.name || data.user?.name || fullName || "User",
-        );
-        setError("");
-        navigate("/dashboard");
-      } else {
-        setError(data.message || "Signup failed");
-      }
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem(
+        "userName",
+        data.name || data.user?.name || fullName || "User",
+      );
+      setError("");
+      navigate("/dashboard");
     } catch (error) {
-      setError("Something went wrong. Please try again.");
+      setError(error.response?.data?.message || "Something went wrong. Please try again.");
     }
   };
 
