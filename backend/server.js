@@ -30,7 +30,11 @@ app.use(cors({
 app.use(express.json());
 
 // 3. Connect to MongoDB Atlas (or local database)
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/palan';
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+    console.error('🔴 MONGO_URI is missing from environment variables!');
+    process.exit(1);
+}
 mongoose.connect(MONGO_URI)
     .then(() => console.log('🟢 MongoDB Connected Successfully'))
     .catch((err) => console.error('🔴 MongoDB Connection Error:', err.message));
