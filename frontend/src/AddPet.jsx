@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import API from './api'; // 👈 Import our new API client
 import './Dashboard.css';
 import './AddPet.css';
 
@@ -26,28 +27,23 @@ const AddPet = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/pets', {
-                method: 'POST',
+            // Uses the shared API client which points to Render automatically
+            const response = await API.post('/api/pets', {
+                name: petName,
+                species: species,
+                age: age
+            }, {
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    name: petName,
-                    species: species,
-                    age: age
-                }),
+                }
             });
 
-            if (response.ok) {
+            if (response.status === 200 || response.status === 201) {
                 navigate('/dashboard');
-            } else {
-                const data = await response.json();
-                alert(`Failed to save pet: ${data.message}`);
             }
         } catch (error) {
             console.error('Error saving pet:', error);
-            alert('Could not connect to the server');
+            alert(error.response?.data?.message || 'Could not connect to the server');
         }
     };
 
@@ -64,10 +60,8 @@ const AddPet = () => {
 
     return (
         <div className='dashboard-container'>
-            {/* Reusable Fixed Sidebar */}
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
 
-            {/* Fixed Top-Right User Avatar & Dropdown Menu */}
             <div style={{ position: 'fixed', top: '20px', right: '30px', zIndex: 1100 }}>
                 <div 
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -115,7 +109,6 @@ const AddPet = () => {
                 )}
             </div>
             
-            {/* Main Content Area */}
             <main className='main-content'>
                 <header className="dashboard-header">
                     <h1>Add a New Pet 🐾</h1>
@@ -144,7 +137,7 @@ const AddPet = () => {
                                 className="add-pet-input"
                             >
                                 <option value="" disabled>Select Species</option>
-                                <option value="Dog">🐕‍🦺 Dog</option>
+                                <option value="Dog">🐕‍‍🦺 Dog</option>
                                 <option value="Cat">🐈 Cat</option>
                                 <option value="Bird">🦜 Bird</option>
                                 <option value="Reptile">🐊 Reptile</option>

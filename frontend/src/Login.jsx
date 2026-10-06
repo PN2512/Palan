@@ -4,8 +4,7 @@ import myLogo from './assets/logo.png';
 import './Palan.css';
 import './Login.css';
 
-// 🌐 Dynamic API URL: Automatically uses Render in production and localhost during development
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "https://palan-mp3q.onrender.com";
 
 const Login = () => {
     const [email, setEmail] = useState('');
