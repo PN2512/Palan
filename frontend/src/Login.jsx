@@ -4,6 +4,9 @@ import myLogo from './assets/logo.png';
 import './Palan.css';
 import './Login.css';
 
+// 🌐 Dynamic API URL: Automatically uses Render in production and localhost during development
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -37,7 +40,7 @@ const Login = () => {
     // 2. Handle Google Response
     const handleGoogleResponse = async (response) => {
         try {
-            const res = await fetch("http://localhost:5000/api/auth/google", {
+            const res = await fetch(`${API_URL}/api/auth/google`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ credential: response.credential }),
@@ -61,7 +64,7 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:5000/api/auth/login', {
+            const response = await fetch(`${API_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -122,7 +125,6 @@ const Login = () => {
 
                 <div className="palan-divider">OR</div>
 
-                {/* 👇 Google Sign-In Button Container */}
                 <div id="google-login-btn" style={{ display: "flex", justifyContent: "center", marginTop: "15px", width: "100%" }}></div>
 
                 <p style={{ textAlign: "center", fontSize: "13px", color: "rgba(255,255,255,0.6)", marginTop: "24px" }}>
