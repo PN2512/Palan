@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import myLogo from './assets/logo.png';
 import Sidebar from './Sidebar';
 import './Dashboard.css';
+
+const API_URL = import.meta.env.VITE_API_URL || "https://palan-mp3q.onrender.com";
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -18,7 +19,6 @@ const Dashboard = () => {
     const [activeAlert, setActiveAlert] = useState(null);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-    // Helper function to play a gentle notification chime using Web Audio API
     const playNotificationSound = () => {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -26,8 +26,8 @@ const Dashboard = () => {
             const gainNode = audioCtx.createGain();
 
             oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
-            oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5 note
+            oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
 
             gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
@@ -63,8 +63,7 @@ const Dashboard = () => {
             }
 
             try {
-                // Fetch Pets from backend
-                const petResponse = await fetch('http://localhost:5000/api/pets', {
+                const petResponse = await fetch(`${API_URL}/api/pets`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -74,8 +73,7 @@ const Dashboard = () => {
                     localStorage.setItem('palan_pets', JSON.stringify(data));
                 }
 
-                // Fetch Tasks from backend
-                const taskResponse = await fetch('http://localhost:5000/api/tasks', {
+                const taskResponse = await fetch(`${API_URL}/api/tasks`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -93,7 +91,6 @@ const Dashboard = () => {
         fetchDashboardData();
     }, [navigate]);
 
-    // Timer check for Feedings and Tasks with audio alert trigger
     useEffect(() => {
         const interval = setInterval(() => {
             const now = new Date();
@@ -119,7 +116,7 @@ const Dashboard = () => {
     const toggleTaskCompletion = async (taskId) => {
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`http://localhost:5000/api/tasks/${taskId}/toggle`, {
+            const res = await fetch(`${API_URL}/api/tasks/${taskId}/toggle`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -147,10 +144,8 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard-container">
-            {/* 1. Reusable Fixed Sidebar */}
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
 
-            {/* 2. Top-Right User Profile Badge */}
             <div style={{ position: 'fixed', top: '20px', right: '30px', zIndex: 1100 }}>
                 <div 
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -198,7 +193,6 @@ const Dashboard = () => {
                 )}
             </div>
 
-            {/* 3. Popup Alerts for Feedings and Tasks with CSS class for mobile responsiveness */}
             {activeAlert && (
                 <div className="dashboard-active-alert" style={{
                     background: activeAlert?.alertType === 'feeding' 
@@ -241,7 +235,6 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {/* 4. Main Content Area */}
             <main className='main-content'>
                 <header className='dashboard-header' style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div>
@@ -251,7 +244,6 @@ const Dashboard = () => {
                 </header>
 
                 <div className='dashboard-grid'>
-                    {/* Column 1: My Pets */}
                     <div className='dash-card'>
                         <h3>My Pets</h3>
                         <div className='card-content'>
@@ -286,7 +278,6 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Column 2: Upcoming Feedings */}
                     <div className='dash-card'>
                         <h3>Upcoming Feedings</h3>
                         <div className='card-content'>
@@ -308,7 +299,6 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Column 3: Husbandry Tasks */}
                     <div className='dash-card'>
                         <h3>Husbandry Tasks</h3>
                         <div className='card-content'>

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import myLogo from './assets/logo.png';
 import './Dashboard.css';
 
+const API_URL = import.meta.env.VITE_API_URL || "https://palan-mp3q.onrender.com";
+
 const HusbandryTasks = () => {
     const navigate = useNavigate();
     const [pets, setPets] = useState([]);
@@ -10,7 +12,7 @@ const HusbandryTasks = () => {
     const [selectedPet, setSelectedPet] = useState('');
     const [taskName, setTaskName] = useState('');
     const [frequency, setFrequency] = useState('');
-    const [taskTime, setTaskTime] = useState('08:00'); // 👈 Added time state for backend popup triggers
+    const [taskTime, setTaskTime] = useState('08:00');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
@@ -26,8 +28,7 @@ const HusbandryTasks = () => {
             if (!token) return;
 
             try {
-                // Fetch backend tasks
-                const taskRes = await fetch('http://localhost:5000/api/tasks', {
+                const taskRes = await fetch(`${API_URL}/api/tasks`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (taskRes.ok) {
@@ -35,8 +36,7 @@ const HusbandryTasks = () => {
                     setTasks(taskData);
                 }
 
-                // Fetch pets
-                const petRes = await fetch('http://localhost:5000/api/pets', {
+                const petRes = await fetch(`${API_URL}/api/pets`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (petRes.ok) {
@@ -56,12 +56,11 @@ const HusbandryTasks = () => {
     const handleDeleteTask = async (taskId) => {
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`http://localhost:5000/api/tasks/${taskId}/toggle`, {
+            const res = await fetch(`${API_URL}/api/tasks/${taskId}/toggle`, {
                 method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
-                // Remove or filter out completed task from state
                 const updatedTasks = tasks.filter(task => task._id !== taskId);
                 setTasks(updatedTasks);
             }
@@ -76,32 +75,28 @@ const HusbandryTasks = () => {
 
         try {
             const token = localStorage.getItem('authToken');
-            const response = await fetch('http://localhost:5000/api/tasks', {
+            const response = await fetch(`${API_URL}/api/tasks`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // 👈 Fixed template literal quotes here
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     petId: selectedPet || 'General Care', 
                     title: taskName,
-                    time: taskTime // 👈 Sends selected time for dashboard popups
+                    time: taskTime 
                 })
             });
 
             if (response.ok) {
                 const savedTask = await response.json();
                 setTasks([savedTask, ...tasks]);
-
-                // Reset form fields
                 setTaskName('');
                 setFrequency('');
                 setTaskTime('08:00');
-            } else {
-                console.error('Failed to save task to backend');
             }
         } catch (error) {
-            console.error('Error connecting to server:', error); // 👈 Fixed typo: console.erro -> console.error
+            console.error('Error connecting to server:', error);
         }
     };
 
@@ -175,9 +170,7 @@ const HusbandryTasks = () => {
                             </div>
 
                             <div style={{ marginBottom: '15px' }}>
-                                <label style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-                                    Task Description
-                                </label>
+                                <label style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>Task Description</label>
                                 <input
                                     type="text"
                                     placeholder='e.g., Deep clean terrarium tank'
@@ -237,18 +230,18 @@ const HusbandryTasks = () => {
                                     }}>
                                         <div>
                                             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-    <h4 style={{ margin: '0' }}>{task.petName || 'General Care'}</h4>
-    <span style={{ 
-        fontSize: '12px', 
-        color: '#7be0f3', 
-        background: 'rgba(255,255,255,0.1)', 
-        padding: '2px 8px', 
-        borderRadius: '4px',
-        whiteSpace: 'nowrap' // 👈 This prevents "Time:" and the numbers from breaking into two lines
-    }}>
-        Time: {task.time}
-    </span>
-</div>
+                                                <h4 style={{ margin: '0' }}>{task.petName || 'General Care'}</h4>
+                                                <span style={{ 
+                                                    fontSize: '12px', 
+                                                    color: '#7be0f3', 
+                                                    background: 'rgba(255,255,255,0.1)', 
+                                                    padding: '2px 8px', 
+                                                    borderRadius: '4px',
+                                                    whiteSpace: 'nowrap'
+                                                }}>
+                                                    Time: {task.time}
+                                                </span>
+                                            </div>
                                             <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.9)' }}>
                                                 {task.title || task.taskName}
                                             </p>

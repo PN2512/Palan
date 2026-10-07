@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import myLogo from './assets/logo.png';
 import './Dashboard.css';
 
+const API_URL = import.meta.env.VITE_API_URL || "https://palan-mp3q.onrender.com";
+
 const UserProfile = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState({ name: '', email: '' });
@@ -19,7 +21,7 @@ const UserProfile = () => {
             }
 
             try {
-                const response = await fetch('http://localhost:5000/api/users/profile', {
+                const response = await fetch(`${API_URL}/api/users/profile`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -43,7 +45,7 @@ const UserProfile = () => {
         e.preventDefault();
         const token = localStorage.getItem('authToken');
         try {
-            const response = await fetch('http://localhost:5000/api/users/profile', {
+            const response = await fetch(`${API_URL}/api/users/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -161,5 +163,4 @@ const UserProfile = () => {
     );
 };
 
-// export Profile = null;
 export default UserProfile;

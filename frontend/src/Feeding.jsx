@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-
 import './Dashboard.css';
+
+const API_URL = import.meta.env.VITE_API_URL || "https://palan-mp3q.onrender.com";
 
 const Feeding = () => {
     const navigate = useNavigate();
@@ -30,7 +31,7 @@ const Feeding = () => {
                 return;
             }
             try {
-                const response = await fetch('http://localhost:5000/api/pets', {
+                const response = await fetch(`${API_URL}/api/pets`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
@@ -89,7 +90,6 @@ const Feeding = () => {
         <div className='dashboard-container'>
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
 
-            {/* Fixed Top-Right User Avatar & Dropdown Menu */}
             <div style={{ position: 'fixed', top: '20px', right: '30px', zIndex: 1100 }}>
                 <div 
                     onClick={() => setShowProfileMenu(!showProfileMenu)}

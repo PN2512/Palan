@@ -4,6 +4,8 @@ import Sidebar from './Sidebar';
 import './MyPets.css';
 import './Dashboard.css';
 
+const API_URL = import.meta.env.VITE_API_URL || "https://palan-mp3q.onrender.com";
+
 const MyPets = () => {
     const navigate = useNavigate();
     const [pets, setPets] = useState([]);
@@ -18,13 +20,12 @@ const MyPets = () => {
         const token = localStorage.getItem('authToken');
         
         if (!token) {
-            console.warn('No token found in localStorage');
             navigate('/login');
             return;
         }
 
         try {
-            const response = await fetch('http://localhost:5000/api/pets', {
+            const response = await fetch(`${API_URL}/api/pets`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -36,12 +37,9 @@ const MyPets = () => {
                 const data = await response.json();
                 setPets(data);
             } else if (response.status === 401) {
-                // Token is invalid or expired
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userName');
                 navigate('/login');
-            } else {
-                console.error('Backend blocked it!');
             }
         } catch (error) {
             console.error('Failed to fetch pets:', error);
@@ -64,7 +62,7 @@ const MyPets = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:5000/api/pets/${id}`, {
+            const response = await fetch(`${API_URL}/api/pets/${id}`, {
                 method: 'DELETE',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -95,10 +93,8 @@ const MyPets = () => {
 
     return (
         <div className="dashboard-container">
-            {/* Reusable Fixed Sidebar */}
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
 
-            {/* Fixed Top-Right User Avatar & Dropdown Menu */}
             <div style={{ position: 'fixed', top: '20px', right: '30px', zIndex: 1100 }}>
                 <div 
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
