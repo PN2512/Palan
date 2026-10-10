@@ -19,7 +19,7 @@ const Login = () => {
             googleInitialized.current = true;
 
             window.google.accounts.id.initialize({
-                client_id: "277186421866-cklh2219et2mkub2e5cqoj5dapr9jc7d.apps.googleusercontent.com",
+                client_id: "277186421866-i1u9eivhk8tv7pfe5j4m55j8vu5q9mve.apps.googleusercontent.com",
                 callback: handleGoogleResponse,
             });
 
