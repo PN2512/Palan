@@ -1,46 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import API from './api';
 import './Dashboard.css';
-
-const API_URL = import.meta.env.VITE_API_URL || "https://palan-mp3q.onrender.com";
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [pets, setPets] = useState([]);
     const [schedules, setSchedules] = useState([]);
     const [tasks, setTasks] = useState([]);
-    const [user, setUser] = useState({ 
-        name: localStorage.getItem('userName') || 'User', 
-        email: '' 
-    });
+    const [user, setUser] = useState({ name: localStorage.getItem('userName') || 'User' });
     const [loading, setLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [activeAlert, setActiveAlert] = useState(null);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-    const playNotificationSound = () => {
-        try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
-
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.3);
-        } catch (e) {
-            console.log('Audio Context not allowed yet or not supported');
-        }
-    };
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -50,37 +22,17 @@ const Dashboard = () => {
                 return;
             }
 
-            const savedPets = localStorage.getItem('palan_pets');
-            if (savedPets) setPets(JSON.parse(savedPets));
-
             const savedSchedules = localStorage.getItem('palan_schedules');
-            if (savedSchedules) {
-                try {
-                    setSchedules(JSON.parse(savedSchedules));
-                } catch (e) {
-                    console.error("Error parsing saved schedules", e);
-                }
-            }
+            if (savedSchedules) setSchedules(JSON.parse(savedSchedules));
 
             try {
-                const petResponse = await fetch(`${API_URL}/api/pets`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (petResponse.ok) {
-                    const data = await petResponse.json();
-                    setPets(data);
-                    localStorage.setItem('palan_pets', JSON.stringify(data));
-                }
-
-                const taskResponse = await fetch(`${API_URL}/api/tasks`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (taskResponse.ok) {
-                    const taskData = await taskResponse.json();
-                    setTasks(taskData);
-                }
+                const [petRes, taskRes] = await Promise.all([
+                    API.get('/api/pets'),
+                    API.get('/api/tasks')
+                ]);
+                setPets(petRes.data);
+                setTasks(taskRes.data);
+                localStorage.setItem('palan_pets', JSON.stringify(petRes.data));
             } catch (error) {
                 console.error("Error connecting to server:", error);
             } finally {
@@ -91,52 +43,17 @@ const Dashboard = () => {
         fetchDashboardData();
     }, [navigate]);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const currentTime = `${hours}:${minutes}`;
-
-            const dueMeal = schedules?.find(meal => meal?.time === currentTime);
-            const dueTask = tasks?.find(task => task?.time === currentTime && !task?.completed);
-
-            if (dueMeal && (!activeAlert || activeAlert?.id !== dueMeal?.id)) {
-                setActiveAlert({ ...dueMeal, alertType: 'feeding' });
-                playNotificationSound();
-            } else if (dueTask && (!activeAlert || activeAlert?._id !== dueTask?._id)) {
-                setActiveAlert({ ...dueTask, alertType: 'husbandry' });
-                playNotificationSound();
-            }
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [schedules, tasks, activeAlert]);
-
     const toggleTaskCompletion = async (taskId) => {
         try {
-            const token = localStorage.getItem('authToken');
-            const res = await fetch(`${API_URL}/api/tasks/${taskId}/toggle`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (res.ok) {
-                const updatedTask = await res.json();
-                setTasks(tasks.map(t => t._id === taskId ? updatedTask : t));
-            }
+            const res = await API.patch(`/api/tasks/${taskId}/toggle`);
+            setTasks(tasks.map(t => t._id === taskId ? res.data : t));
         } catch (err) {
             console.error('Failed to update task status');
         }
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('palan_pets');
-        localStorage.removeItem('palan_schedules');
-        localStorage.removeItem('palan_husbandry');
+        localStorage.clear();
         navigate('/login');
     };
 
@@ -147,26 +64,19 @@ const Dashboard = () => {
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
 
             <div style={{ position: 'fixed', top: '20px', right: '30px', zIndex: 1100 }}>
-                <div 
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '10px',
-                        background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)',
-                        padding: '6px 14px 6px 6px', borderRadius: '30px', cursor: 'pointer',
-                        border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                    }}
-                >
+                <div onClick={() => setShowProfileMenu(!showProfileMenu)} style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)',
+                    padding: '6px 14px 6px 6px', borderRadius: '30px', cursor: 'pointer',
+                    border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }}>
                     <div style={{
                         width: '38px', height: '38px', borderRadius: '50%',
                         background: 'linear-gradient(135deg, #6366f1, #a855f7)',
                         color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontWeight: 'bold', fontSize: '16px'
-                    }}>
-                        {userInitial}
-                    </div>
-                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500', paddingRight: '5px' }}>
-                        {user?.name}
-                    </span>
+                    }}>{userInitial}</div>
+                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500', paddingRight: '5px' }}>{user?.name}</span>
                 </div>
 
                 {showProfileMenu && (
@@ -176,103 +86,38 @@ const Dashboard = () => {
                         borderRadius: '12px', padding: '15px', width: '220px',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '10px'
                     }}>
-                        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
-                            <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>{user?.name}</p>
-                            <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#cbd5e1' }}>Active Account</p>
-                        </div>
-                        <button 
-                            onClick={handleLogout}
-                            style={{
-                                background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: 'none',
-                                padding: '8px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px'
-                            }}
-                        >
-                            Log Out
-                        </button>
+                        <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>{user?.name}</p>
+                        <button onClick={handleLogout} style={{
+                            background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: 'none',
+                            padding: '8px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px'
+                        }}>Log Out</button>
                     </div>
                 )}
             </div>
 
-            {activeAlert && (
-                <div className="dashboard-active-alert" style={{
-                    background: activeAlert?.alertType === 'feeding' 
-                        ? 'linear-gradient(135deg, #6366f1, #a855f7)' 
-                        : 'linear-gradient(135deg, #0ea5e9, #2dd4bf)',
-                    color: '#fff', padding: '20px 25px', borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.4)', zIndex: 1000,
-                    display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '280px'
-                }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ fontSize: '16px' }}>
-                            {activeAlert?.alertType === 'feeding' ? '🚨 Feeding Time!' : '🐾 Care Task Due!'}
-                        </strong>
-                        <span style={{ cursor: 'pointer', fontSize: '18px' }} onClick={() => setActiveAlert(null)}>✕</span>
-                    </div>
-                    <p style={{ margin: 0, fontSize: '14px' }}>
-                        {activeAlert?.alertType === 'feeding' 
-                            ? `Time to feed ${activeAlert?.petName}: ${activeAlert?.food}`
-                            : `Task due: ${activeAlert?.title}`
-                        }
-                    </p>
-                    <button 
-                        onClick={() => {
-                            if (activeAlert?.alertType === 'feeding') {
-                                const updated = schedules.filter(m => m?.id !== activeAlert?.id);
-                                setSchedules(updated);
-                                localStorage.setItem('palan_schedules', JSON.stringify(updated));
-                            } else {
-                                toggleTaskCompletion(activeAlert?._id);
-                            }
-                            setActiveAlert(null);
-                        }}
-                        style={{
-                            marginTop: '5px', background: '#fff', color: '#1e1b4b',
-                            border: 'none', padding: '8px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer'
-                        }}
-                    >
-                        Mark as Done & Dismiss
-                    </button>
-                </div>
-            )}
-
             <main className='main-content'>
-                <header className='dashboard-header' style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div>
-                        <h2>Welcome back! 🐣</h2>
-                        <p>Here is what is happening with your pet today.</p>
-                    </div>
+                <header className='dashboard-header'>
+                    <h2>Welcome back! 🐣</h2>
+                    <p>Here is what is happening with your pet today.</p>
                 </header>
 
                 <div className='dashboard-grid'>
                     <div className='dash-card'>
                         <h3>My Pets</h3>
                         <div className='card-content'>
-                            {loading ? (
-                                <p>Loading your pets...</p>
-                            ) : pets?.length === 0 ? (
-                                <p>You haven't added any pet profiles yet.</p>
-                            ) : (
+                            {loading ? <p>Loading your pets...</p> : pets.length === 0 ? <p>No pets added yet.</p> : (
                                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {pets?.map(pet => (
-                                        <li key={pet?._id} style={{
-                                            background: 'rgba(255,255,255,0.05)', padding: '12px',
-                                            borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                                        }}>
+                                    {pets.map(pet => (
+                                        <li key={pet._id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div>
-                                                <strong style={{ fontSize: '16px' }}>{pet?.name}</strong>
-                                                <span style={{ display: 'block', fontSize: '12px', color: '#cbd5e1' }}>{pet?.species}</span>
+                                                <strong>{pet.name}</strong>
+                                                <span style={{ display: 'block', fontSize: '12px', color: '#cbd5e1' }}>{pet.species}</span>
                                             </div>
-                                            {pet?.age && <span style={{ fontSize: '13px', color: '#cbd5e1' }}>Age: {pet?.age}</span>}
                                         </li>
                                     ))}
                                 </ul>
                             )}
-                            <button onClick={() => navigate('/add-pet')}
-                                style={{
-                                    marginTop: '15px', padding: '10px 15px', borderRadius: '8px', border: 'none',
-                                    background: "white", color: "#1e1b4b", cursor: "pointer", fontWeight: "bold",
-                                    width: pets?.length > 0 ? '100%': 'auto'
-                                }}>
+                            <button onClick={() => navigate('/add-pet')} style={{ marginTop: '15px', padding: '10px 15px', borderRadius: '8px', border: 'none', background: "white", color: "#1e1b4b", cursor: "pointer", fontWeight: "bold", width: pets.length > 0 ? '100%': 'auto' }}>
                                 + Add a Pet
                             </button>
                         </div>
@@ -281,17 +126,15 @@ const Dashboard = () => {
                     <div className='dash-card'>
                         <h3>Upcoming Feedings</h3>
                         <div className='card-content'>
-                            {schedules?.length === 0 ? (
-                                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No feeding schedules added yet.</p>
-                            ) : (
+                            {schedules.length === 0 ? <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No feeding schedules added yet.</p> : (
                                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {schedules?.slice(0, 3).map((meal) => (
-                                        <li key={meal?.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #6366f1' }}>
+                                    {schedules.slice(0, 3).map((meal) => (
+                                        <li key={meal.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #6366f1' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <strong>{meal?.petName}</strong>
-                                                <span style={{ color: '#818cf8', fontWeight: 'bold' }}>{meal?.time}</span>
+                                                <strong>{meal.petName}</strong>
+                                                <span style={{ color: '#818cf8', fontWeight: 'bold' }}>{meal.time}</span>
                                             </div>
-                                            <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{meal?.food}</span>
+                                            <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{meal.food}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -302,23 +145,14 @@ const Dashboard = () => {
                     <div className='dash-card'>
                         <h3>Husbandry Tasks</h3>
                         <div className='card-content'>
-                            {tasks?.length === 0 ? (
-                                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No husbandry tasks logged.</p>
-                            ) : (
-                                <div className="reminders-container" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {tasks?.map(task => (
-                                        <div key={task?._id} className="task-item" style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #4ca1af', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <input 
-                                                type="checkbox" 
-                                                checked={task?.completed} 
-                                                onChange={() => toggleTaskCompletion(task?._id)}
-                                                style={{ cursor: 'pointer', width: '18px', height: '18px' }}
-                                            />
-                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <span style={{ textDecoration: task?.completed ? 'line-through' : 'none', color: task?.completed ? '#94a3b8' : '#fff', fontWeight: 'bold', fontSize: '14px' }}>
-                                                    {task?.title}
-                                                </span>
-                                                <span style={{ fontSize: '12px', color: '#7be0f3' }}>Time: {task?.time}</span>
+                            {tasks.length === 0 ? <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>No husbandry tasks logged.</p> : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    {tasks.map(task => (
+                                        <div key={task._id} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #4ca1af', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <input type="checkbox" checked={task.completed} onChange={() => toggleTaskCompletion(task._id)} style={{ cursor: 'pointer', width: '18px', height: '18px' }} />
+                                            <div>
+                                                <span style={{ textDecoration: task.completed ? 'line-through' : 'none', color: task.completed ? '#94a3b8' : '#fff', fontWeight: 'bold', fontSize: '14px' }}>{task.title}</span>
+                                                <span style={{ display: 'block', fontSize: '12px', color: '#7be0f3' }}>Time: {task.time}</span>
                                             </div>
                                         </div>
                                     ))}

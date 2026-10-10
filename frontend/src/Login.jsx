@@ -1,133 +1,80 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import API from './api';
 import myLogo from './assets/logo.png';
-import './Palan.css';
-import './Login.css';
-
-const API_URL = import.meta.env.VITE_API_URL || "https://palan-mp3q.onrender.com";
+import './Dashboard.css';
 
 const Login = () => {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
-    const googleInitialized = useRef(false);
 
-    // 1. Initialize Google Auth on mount
-    useEffect(() => {
-        if (window.google && !googleInitialized.current) {
-            googleInitialized.current = true;
-
-            window.google.accounts.id.initialize({
-                client_id: "277186421866-i1u9eivhk8tv7pfe5j4m55j8vu5q9mve.apps.googleusercontent.com",
-                callback: handleGoogleResponse,
-            });
-
-            const btnContainer = document.getElementById("google-login-btn");
-            if (btnContainer) {
-                btnContainer.innerHTML = "";
-                window.google.accounts.id.renderButton(btnContainer, {
-                    theme: "outline",
-                    size: "large",
-                    width: 260,
-                    text: "signin_with",
-                });
-            }
-        }
-    }, []);
-
-    // 2. Handle Google Response
-    const handleGoogleResponse = async (response) => {
-        try {
-            const res = await fetch(`${API_URL}/api/auth/google`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ credential: response.credential }),
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                localStorage.setItem("authToken", data.token);
-                localStorage.setItem("userName", data.name || data.user?.name || "User");
-                setError("");
-                navigate("/dashboard");
-            } else {
-                setError(data.message || "Google login failed");
-            }
-        } catch (err) {
-            setError("Something went wrong with Google authentication.");
-        }
-    };
-
-    // 3. Handle standard email/password login
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`${API_URL}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('userName', data.user?.name || 'User');
-                setError('');
-                navigate('/dashboard');
-            } else {
-                setError(data.message || 'Login failed');
-            }
-        } catch (error) {
-            setError('Something went wrong. Please try again.');
+            const response = await API.post('/api/auth/login', { email, password });
+            localStorage.setItem('authToken', response.data.token);
+            localStorage.setItem('userName', response.data.name || 'User');
+            navigate('/dashboard');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Invalid email or password');
         }
     };
 
+    useEffect(() => {
+        /* global google */
+        if (window.google) {
+            google.accounts.id.initialize({
+                client_id: "277186421866-i1u9eivhk8tv7pfe5j4m55j8vu5q9mve.apps.googleusercontent.com",
+                callback: async (response) => {
+                    try {
+                        const res = await API.post('/api/auth/google', { token: response.credential });
+                        localStorage.setItem('authToken', res.data.token);
+                        localStorage.setItem('userName', res.data.name || 'User');
+                        navigate('/dashboard');
+                    } catch (err) {
+                        setError('Google authentication failed on server.');
+                    }
+                }
+            });
+
+            google.accounts.id.renderButton(
+                document.getElementById("google-signin-btn"),
+                { theme: "outline", size: "large", width: "100%" }
+            );
+        }
+    }, [navigate]);
+
     return (
-        <div className="login-wrapper">
-            <div className="palan-card">
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "16px" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "4px" }}>
-                        <img src={myLogo} alt="Palan Logo" style={{ width: "46px", height: "46px", objectFit: "cover", borderRadius: "50%", filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.3))" }} />
-                        <h2 style={{ color: "#ffffff", fontSize: "28px", fontWeight: "700", margin: 0, letterSpacing: "0.5px" }}>
-                            Palan
-                        </h2>
-                    </div>
-                    <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px", margin: 0 }}>
-                        Your Pet Care Companion
-                    </p>
+        <div className="dashboard-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+            <div className="dash-card" style={{ maxWidth: '400px', width: '100%', padding: '40px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                    <img src={myLogo} alt="Palan Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', marginBottom: '10px' }} />
+                    <h2>Welcome to Palan 🐾</h2>
+                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>Sign in to manage your pets and schedules</p>
                 </div>
 
-                {error && <p style={{ color: "#ffb3b3", textAlign: "center", fontSize: "14px" }}>{error}</p>}
+                {error && <div style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171', padding: '10px', borderRadius: '6px', marginBottom: '15px', fontSize: '14px' }}>{error}</div>}
 
-                <form onSubmit={handleLogin} className="palan-input-group">
-                    <input
-                        type="email"
-                        placeholder="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="palan-input"
-                    />
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="palan-input"
-                    />
-                    <button type="submit" className="palan-btn-login">
-                        Sign In
-                    </button>
+                <form onSubmit={handleLogin}>
+                    <div style={{ marginBottom: '15px' }}>
+                        <label style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>Email Address</label>
+                        <input type="email" className="add-pet-input" style={{ width: '100%', marginTop: '5px' }} value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>Password</label>
+                        <input type="password" className="add-pet-input" style={{ width: '100%', marginTop: '5px' }} value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    </div>
+                    <button type="submit" className="btn-primary" style={{ width: '100%', cursor: 'pointer', marginBottom: '15px' }}>Sign In</button>
                 </form>
 
-                <div className="palan-divider">OR</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+                    <div id="google-signin-btn"></div>
+                </div>
 
-                <div id="google-login-btn" style={{ display: "flex", justifyContent: "center", marginTop: "15px", width: "100%" }}></div>
-
-                <p style={{ textAlign: "center", fontSize: "13px", color: "rgba(255,255,255,0.6)", marginTop: "24px" }}>
-                    Don't have an account? <a href="/signup" style={{ color: "white", textDecoration: "underline", fontWeight: "500" }}>Sign up</a>
+                <p style={{ textAlign: 'center', fontSize: '14px', color: 'rgba(255,255,255,0.7)', marginTop: '15px' }}>
+                    Don't have an account? <Link to="/signup" style={{ color: '#818cf8', fontWeight: 'bold' }}>Sign Up</Link>
                 </p>
             </div>
         </div>

@@ -1,175 +1,56 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API from './api';
 import Sidebar from './Sidebar';
-import API from './api'; // 👈 Import our new API client
 import './Dashboard.css';
-import './AddPet.css';
 
 const AddPet = () => {
     const navigate = useNavigate();
-    const [petName, setPetName] = useState('');
+    const [name, setName] = useState('');
     const [species, setSpecies] = useState('');
     const [age, setAge] = useState('');
+    const [error, setError] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [user] = useState({ 
-        name: localStorage.getItem('userName') || 'User' 
-    });
-    const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-    const handleAddPetSubmit = async (e) => {
+    const handleAddPet = async (e) => {
         e.preventDefault();
-
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            alert('You must be logged in to add a pet.');
-            navigate('/login');
-            return;
-        }
-
         try {
-            // Uses the shared API client which points to Render automatically
-            const response = await API.post('/api/pets', {
-                name: petName,
-                species: species,
-                age: age
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.status === 200 || response.status === 201) {
-                navigate('/dashboard');
-            }
-        } catch (error) {
-            console.error('Error saving pet:', error);
-            alert(error.response?.data?.message || 'Could not connect to the server');
+            await API.post('/api/pets', { name, species, age });
+            navigate('/my-pets');
+        } catch (err) {
+            setError('Failed to add pet. Please try again.');
         }
     };
-
-    const handleLogout = () => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('palan_pets');
-        localStorage.removeItem('palan_schedules');
-        localStorage.removeItem('palan_husbandry');
-        navigate('/login');
-    };
-
-    const userInitial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
 
     return (
-        <div className='dashboard-container'>
+        <div className="dashboard-container">
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
-
-            <div style={{ position: 'fixed', top: '20px', right: '30px', zIndex: 1100 }}>
-                <div 
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '10px',
-                        background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)',
-                        padding: '6px 14px 6px 6px', borderRadius: '30px', cursor: 'pointer',
-                        border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                    }}
-                >
-                    <div style={{
-                        width: '38px', height: '38px', borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-                        color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 'bold', fontSize: '16px'
-                    }}>
-                        {userInitial}
-                    </div>
-                    <span style={{ color: '#fff', fontSize: '14px', fontWeight: '500', paddingRight: '5px' }}>
-                        {user.name}
-                    </span>
-                </div>
-
-                {showProfileMenu && (
-                    <div style={{
-                        position: 'absolute', top: '55px', right: '0',
-                        background: '#1e1b4b', border: '1px solid rgba(255,255,255,0.15)',
-                        borderRadius: '12px', padding: '15px', width: '220px',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: '10px'
-                    }}>
-                        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
-                            <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>{user.name}</p>
-                            <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#cbd5e1' }}>Active Account</p>
-                        </div>
-                        <button 
-                            onClick={handleLogout}
-                            style={{
-                                background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: 'none',
-                                padding: '8px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px'
-                            }}
-                        >
-                            Log Out
-                        </button>
-                    </div>
-                )}
-            </div>
-            
-            <main className='main-content'>
-                <header className="dashboard-header">
+            <main className="main-content" style={{ padding: '40px' }}>
+                <header style={{ marginBottom: '30px' }}>
                     <h1>Add a New Pet 🐾</h1>
-                    <p>Tell us a little bit about your companion.</p>
+                    <p>Register a new companion to your dashboard.</p>
                 </header>
-                
-                <div className='add-pet-card'>
-                    <form onSubmit={handleAddPetSubmit}>
-                        <div className="add-pet-form-group">
-                            <label>Pet Name</label>
-                            <input 
-                                type="text"
-                                placeholder='e.g. Luna'
-                                value={petName}
-                                onChange={(e) => setPetName(e.target.value)}
-                                required
-                                className="add-pet-input"
-                            />
+                <div className="dash-card" style={{ maxWidth: '600px', width: '100%' }}>
+                    {error && <div style={{ color: '#f87171', marginBottom: '15px' }}>{error}</div>}
+                    <form onSubmit={handleAddPet}>
+                        <div style={{ marginBottom: '15px' }}>
+                            <label style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>Pet Name</label>
+                            <input type="text" className="add-pet-input" style={{ width: '100%', marginTop: '5px' }} value={name} onChange={(e) => setName(e.target.value)} required />
                         </div>
-                        <div className='add-pet-form-group'>
-                            <label>Species</label>
-                            <select 
-                                required
-                                value={species}
-                                onChange={(e) => setSpecies(e.target.value)}
-                                className="add-pet-input"
-                            >
-                                <option value="" disabled>Select Species</option>
-                                <option value="Dog">🐕‍‍🦺 Dog</option>
-                                <option value="Cat">🐈 Cat</option>
-                                <option value="Bird">🦜 Bird</option>
-                                <option value="Reptile">🐊 Reptile</option>
-                                <option value="Small Animal">🦋 Small Animal</option>
-                                <option value="Other">🐚 Other</option>
-                            </select>
+                        <div style={{ marginBottom: '15px' }}>
+                            <label style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>Species / Type</label>
+                            <input type="text" className="add-pet-input" style={{ width: '100%', marginTop: '5px' }} placeholder="e.g., Cat, Dog, Bird" value={species} onChange={(e) => setSpecies(e.target.value)} required />
                         </div>
-                        <div className='add-pet-form-group'>
-                            <label>Age (in Years)</label>
-                            <input 
-                                type="number"
-                                step="0.1"
-                                placeholder='e.g. 2.5'
-                                value={age}
-                                onChange={(e) => setAge(e.target.value)}
-                                className="add-pet-input"
-                            />
+                        <div style={{ marginBottom: '15px' }}>
+                            <label style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>Age (Optional)</label>
+                            <input type="number" className="add-pet-input" style={{ width: '100%', marginTop: '5px' }} value={age} onChange={(e) => setAge(e.target.value)} />
                         </div>
-                        
-                        <div className="add-pet-actions">
-                            <button type="button" className='btn-cancel' onClick={() => navigate('/dashboard')}>
-                                Cancel
-                            </button>
-                            <button type="submit" className='btn-save'>
-                                Save Pet Profile
-                            </button>
-                        </div>
+                        <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '10px', cursor: 'pointer' }}>Save Pet</button>
                     </form>
                 </div>
             </main>
         </div>
-    )
-}
+    );
+};
 
 export default AddPet;
